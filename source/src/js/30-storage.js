@@ -514,6 +514,11 @@ if (state.savedAt && !viewingShared) {
   }
 }
 
+// on a phone or tablet the settings are a drawer, and it always starts closed so the calendar comes first
+if (window.innerWidth <= 980) {
+  state.sidebarHidden = true;
+}
+
 let notesEditing = false;
 
 lastSavedJson = JSON.stringify(state);

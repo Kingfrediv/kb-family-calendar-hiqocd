@@ -2059,7 +2059,7 @@ body.show-initials .dp-tile.p2 {
     top: 0;
     bottom: 0;
     left: 0;
-    width: min(440px, 100vw);
+    width: min(440px, 92vw);
     overflow-y: auto;
     overscroll-behavior: contain;
     background: var(--bg);
@@ -2131,4 +2131,48 @@ body.show-initials .dp-tile.p2 {
   color: var(--muted);
   line-height: 1.4;
   margin: 0 0 10px;
+}
+
+/* ---- phones: the calendar comes before the summary, and the header takes less room ---- */
+@media (max-width: 700px) {
+  #summaryCard {
+    order: 42;
+  }
+  #statsCard {
+    order: 44;
+  }
+  header .subtitle,
+  header .brand-name {
+    display: none;
+  }
+  header {
+    padding: 8px 12px;
+    gap: 6px;
+  }
+  header h1 {
+    font-size: 1rem;
+  }
+  .header-actions {
+    gap: 4px;
+  }
+  .save-status {
+    margin-top: 0;
+  }
+}
+
+/* longer words (Spanish) wrap inside the toggle buttons instead of pushing the row wider */
+.toggle-btn {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}
+
+/* long words in other languages wrap inside the settings instead of widening them */
+.sidebar .btn,
+.sidebar .hol-tile-name,
+.sidebar .hol-tile-owner,
+.sidebar .preset-btn {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  max-width: 100%;
 }

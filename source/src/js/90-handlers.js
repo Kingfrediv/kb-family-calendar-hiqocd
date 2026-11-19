@@ -277,24 +277,28 @@ document.getElementById("timeToP1Input").oninput = _0x16aa53 => {
   state.timeToP1 = _0x16aa53.target.value;
   save();
   renderChrome();
+  drawTonight();
 };
 
 document.getElementById("timeToP2Input").oninput = _0x1416f8 => {
   state.timeToP2 = _0x1416f8.target.value;
   save();
   renderChrome();
+  drawTonight();
 };
 
 document.getElementById("timeHolidayInput").oninput = _0x18cc67 => {
   state.timeHoliday = _0x18cc67.target.value;
   save();
   renderChrome();
+  drawTonight();
 };
 
 document.getElementById("exchangeLocationInput").oninput = _0x2d6750 => {
   state.exchangeLocation = _0x2d6750.target.value;
   save();
   renderChrome();
+  drawTonight();
 };
 
 document.getElementById("summerDeadlineInput").oninput = _0x16c800 => {
@@ -404,6 +408,7 @@ document.getElementById("btnResetOverrides").onclick = () => {
       delete state.overrides[_0x176a36];
     }
   });
+  lastUndoPushAt = 0;
   save();
   render();
   toast("Cleared the changed days for this year.", { label: "Undo", run: undo });
@@ -420,6 +425,7 @@ document.getElementById("btnResetHolidays").onclick = () => {
       delete state.holidayYearOverrides[_0x265355];
     }
   });
+  lastUndoPushAt = 0;
   save();
   render();
   toast("Holiday tiles reset for this year.", { label: "Undo", run: undo });

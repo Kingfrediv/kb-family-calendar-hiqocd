@@ -101,7 +101,8 @@ ES_RULES.push(
   [/^(\d+) days? picked: (.+)$/, (n, range) => `${n} ${n === "1" ? "día elegido" : "días elegidos"}: ${range}`],
   [/^(.+) picked\. Tap the last day, or choose now for just this day\.$/, d => `${d} elegido. Toca el último día, o elige ahora solo para este día.`],
   [/^(\d+) days? \((.+)\) set to (.+)\.$/, (n, range, who) => `${n} ${n === "1" ? "día" : "días"} (${range}) cambiados a ${who}.`],
-  [/^Change request: (.+)$/, rest => `Solicitud de cambio: ${rest}`],
+  [/^Change request: (.+)$/, rest => `Solicitud de cambio: ${T(rest)}`],
+  [/^Could we change (.+)\?$/, what => `¿Podemos cambiar ${what}?`],
   [/^Message from the sender: “(.+)”$/, text => `Mensaje de quien lo envió: “${text}”`],
 
   // ---- names in the settings

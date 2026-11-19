@@ -122,7 +122,7 @@ document.getElementById("btnRangeDone").onclick = stopSelecting;
 document.getElementById("btnRangeRequest").onclick = () => {
   const days = selectedSorted();
   const range = days.length ? dateRangeText(days[0], days[days.length - 1]) : "";
-  const message = selectSummary ? `Change request: ${selectSummary}` : range ? tr(`Could we change ${range}?`) : "";
+  const message = selectSummary ? tr(`Change request: ${selectSummary}`) : range ? tr(`Could we change ${range}?`) : "";
   stopSelecting();
   openShareDialog({ message });
 };

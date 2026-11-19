@@ -103,8 +103,9 @@ function tr(text, quiet) {
 
 const I18N_ATTRS = ["placeholder", "aria-label", "title"];
 
+// parts of the page that are never translated: scripts, styles, typed text in a box (its words, not its placeholder), marked parts
 function i18nSkip(el) {
-  return el.tagName === "SCRIPT" || el.tagName === "STYLE" || el.tagName === "TEXTAREA" || el.hasAttribute("data-no-tr");
+  return el.tagName === "SCRIPT" || el.tagName === "STYLE" || el.hasAttribute("data-no-tr");
 }
 
 function i18nAttrs(el) {
@@ -137,7 +138,7 @@ function i18nText(node) {
 
 function i18nTree(root) {
   if (root.nodeType === 3) {
-    if (!root.parentNode || !i18nSkip(root.parentNode)) {
+    if (!root.parentNode || !(i18nSkip(root.parentNode) || root.parentNode.tagName === "TEXTAREA")) {
       i18nText(root);
     }
     return;
@@ -146,6 +147,9 @@ function i18nTree(root) {
     return;
   }
   i18nAttrs(root);
+  if (root.tagName === "TEXTAREA") {
+    return;
+  }
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
     acceptNode(n) {
       if (n.nodeType === 1) {
@@ -153,7 +157,7 @@ function i18nTree(root) {
           return NodeFilter.FILTER_REJECT;
         }
         i18nAttrs(n);
-        return NodeFilter.FILTER_SKIP;
+        return n.tagName === "TEXTAREA" ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_SKIP;
       }
       return NodeFilter.FILTER_ACCEPT;
     }
@@ -176,7 +180,7 @@ function startTranslator() {
       if (r.type === "childList") {
         r.addedNodes.forEach(i18nTree);
       } else if (r.type === "characterData") {
-        if (r.target.parentNode && !i18nSkip(r.target.parentNode)) {
+        if (r.target.parentNode && !i18nSkip(r.target.parentNode) && r.target.parentNode.tagName !== "TEXTAREA") {
           i18nText(r.target);
         }
       } else if (r.type === "attributes" && !i18nSkip(r.target)) {

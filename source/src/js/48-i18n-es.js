@@ -1,6 +1,9 @@
 // Spanish text for the calendar. Keys are the English text exactly as it appears (white space collapsed, numbers written as #).
 // A "#" in the English is replaced by the same number in the Spanish. Names of months and days are already Spanish.
 const ES_DICT = {
+  "Examples:": "Ejemplos:",
+  "Bell times, early release days, bus info...": "Horarios de timbre, días de salida temprano, información del autobús...",
+  "e.g. Dentist at 3, pack the swim bag": "p. ej. Dentista a las 3, llevar la bolsa de natación",
   "This license has already been used on the maximum of # devices. Please contact the seller if you need to free up a device.": "Esta licencia ya se usó en el máximo de # dispositivos. Contacta con el vendedor si necesitas liberar uno.",
   "Weekday": "Día de la semana",
   "Parent": "Progenitor",
