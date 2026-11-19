@@ -1,0 +1,19 @@
+{
+  "name": "kb-parenting-calendar",
+  "private": true,
+  "description": "Source, build script and browser tests for the Kingdom Building parenting calendar",
+  "type": "commonjs",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:plain": "node build.mjs --plain",
+    "release": "node build.mjs --release",
+    "test": "node build.mjs && node tests/run-all.js",
+    "check:release": "node build.mjs --check ../index.html",
+    "test:release": "KB_INDEX=../index.html KB_DIST=.. node tests/run-all.js"
+  },
+  "devDependencies": {
+    "axe-core": "^4.10.0",
+    "javascript-obfuscator": "^5.10.1",
+    "playwright": "^1.63.0"
+  }
+}
