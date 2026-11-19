@@ -160,7 +160,7 @@ function boolArraysEqual(_0x121745, _0xb0faaf) {
   );
 }
 
-function applyPreset(id) {
+function applyPreset(id, quiet) {
   if (!requireLicense()) {
     return;
   }
@@ -184,7 +184,9 @@ function applyPreset(id) {
   lastUndoPushAt = 0;
   save();
   render();
-  toast(textOrCall(def.done) || "Schedule preset applied");
+  if (!quiet) {
+    toast(textOrCall(def.done) || "Schedule preset applied", { label: "Undo", run: undo });
+  }
 }
 
 // Highlights the preset that matches what is set now (swapping the two parents still counts as a match).

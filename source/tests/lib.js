@@ -62,7 +62,7 @@ async function unlock(page, { setup = true, names } = {}) {
   if (setup) {
     await page.waitForSelector('#setupOverlay.show', { timeout: 3000 }).catch(() => {});
     if (await page.locator('#setupOverlay.show').count()) {
-      if (names) { await page.fill('#setupChild', names[0]); await page.fill('#setupP1', names[1]); await page.fill('#setupP2', names[2]); await page.click('#btnSetupStart'); }
+      if (names) { await page.fill('#setupChild', names[0]); await page.fill('#setupP1', names[1]); await page.fill('#setupP2', names[2]); if (await page.locator('#btnSetupNext').count()) { await page.click('#btnSetupNext'); await page.click('#btnSetupNext'); } await page.click('#btnSetupStart'); }
       else await page.click('#btnSetupSkip');
     }
   }
@@ -116,3 +116,18 @@ async function flipDay(page, ds) {
   await page.waitForSelector('#daySheet.show', { state: 'detached' });
 }
 Object.assign(module.exports, { setDay, flipDay });
+
+// Download the phone-calendar file through its dialog.  opts: { years, alarm, zone, plans }
+async function icsDownload(page, opts = {}) {
+  await act(page, '#btnExportIcs');
+  await page.waitForSelector('#icsOverlay.show');
+  if (opts.years) await page.selectOption('#icsYears', String(opts.years));
+  if (opts.alarm) await page.selectOption('#icsAlarm', opts.alarm);
+  if (opts.zone) await page.selectOption('#icsZone', opts.zone);
+  await page.setChecked('#icsPlans', opts.plans !== false);
+  const [d] = await Promise.all([page.waitForEvent('download'), page.click('#btnIcsDownload')]);
+  const p = OUT + '/ics_' + d.suggestedFilename();
+  await d.saveAs(p);
+  return { path: p, text: fs.readFileSync(p, 'utf8'), name: d.suggestedFilename() };
+}
+Object.assign(module.exports, { icsDownload });

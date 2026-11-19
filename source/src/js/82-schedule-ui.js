@@ -67,6 +67,9 @@ function renderScheduleControls() {
     drawSummer();
   }
   document.getElementById("modeCycleBtn").classList.toggle("active", state.baseMode === "cycle");
+  document.getElementById("initialsOff").classList.toggle("active", !state.showInitials);
+  document.getElementById("initialsOn").classList.toggle("active", !!state.showInitials);
+  document.body.classList.toggle("show-initials", !!state.showInitials);
   document.getElementById("cycleWrap").style.display = state.baseMode === "cycle" ? "block" : "none";
   setInputValue("cycleLengthInput", state.cycleLength);
   setInputValue("cycleAnchorInput", state.cycleAnchor);
@@ -122,6 +125,8 @@ function setSummerWindowFromSelects() {
   });
 }
 
+document.getElementById("initialsOff").onclick = () => changeSetting(() => (state.showInitials = false));
+document.getElementById("initialsOn").onclick = () => changeSetting(() => (state.showInitials = true));
 document.getElementById("modeCycleBtn").onclick = () => changeSetting(() => (state.baseMode = "cycle"));
 document.getElementById("cycleLengthInput").onchange = ev => {
   const n = Math.max(2, Math.min(28, Math.round(Number(ev.target.value)) || state.cycleLength));

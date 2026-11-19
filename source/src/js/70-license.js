@@ -270,13 +270,7 @@ async function onUnlockClick() {
       document.getElementById("sharedBanner").classList.remove("show");
     }
     if (!viewingShared && !pendingShareKind && !state.savedAt && !state.setupComplete) {
-      document.getElementById("setupChild").value = state.childName || "";
-      document.getElementById("setupP1").value = state.p1Name && state.p1Name !== "Parent 1" ? state.p1Name : "";
-      document.getElementById("setupP2").value = state.p2Name && state.p2Name !== "Parent 2" ? state.p2Name : "";
-      document.getElementById("setupMothers").value = state.mothersDayOwner || "skip";
-      document.getElementById("setupFathers").value = state.fathersDayOwner || "skip";
-      document.getElementById("setupOverlay").classList.add("show");
-      setTimeout(() => document.getElementById("setupChild").focus(), 50);
+      openSetupDialog();
     }
   } catch (_0x35260e) {
     if (_0x35260e && _0x35260e.code === "invalid") {
@@ -330,7 +324,7 @@ function blockEditsWhenUnlicensed(_0x4c4f63) {
   }
   if (
     _0x3b65ce.closest(
-      "#btnPrevYear,#btnNextYear,#headerYearBadge,#btnToday,#btnMenuShare,#menuBackdrop,#yearSelect,#monthSelect,#viewYearBtn,#viewMonthBtn,#btnToggleSidebar,#btnDismissShared,.menu-display,.month-nav,#shareMenu .menu-label,#shareMenu .menu-note"
+      "#btnPrevYear,#btnNextYear,#headerYearBadge,#btnToday,#btnMenuShare,#menuBackdrop,#yearSelect,#monthSelect,#viewYearBtn,#viewMonthBtn,#btnToggleSidebar,#btnDismissShared,.menu-display,.month-nav,.plan-link,.menu-radio,#shareMenu .menu-label,#shareMenu .menu-note"
     )
   ) {
     return;

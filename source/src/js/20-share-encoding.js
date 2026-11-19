@@ -90,7 +90,8 @@ const SHARE_KEYS = {
   cycleAnchor: "zh",
   // third release
   dayNotes: "zj",
-  activities: "zk"
+  activities: "zk",
+  showInitials: "zl"
 };
 
 const SHARE_KEYS_REVERSE = {};

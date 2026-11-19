@@ -3,15 +3,6 @@
 // Storage lives in 35-calendars.js; this is switching, adding, deleting and the lists that show them.
 // ---------------------------------------------------------------------------------------------
 
-function openSetupDialog() {
-  document.getElementById("setupChild").value = state.childName || "";
-  document.getElementById("setupP1").value = state.p1Name && state.p1Name !== "Parent 1" ? state.p1Name : "";
-  document.getElementById("setupP2").value = state.p2Name && state.p2Name !== "Parent 2" ? state.p2Name : "";
-  document.getElementById("setupMothers").value = state.mothersDayOwner || "skip";
-  document.getElementById("setupFathers").value = state.fathersDayOwner || "skip";
-  document.getElementById("setupOverlay").classList.add("show");
-  setTimeout(() => document.getElementById("setupChild").focus(), 50);
-}
 
 // Calendars can be switched and added by someone with a license, on their own saved calendar.
 function canManageCalendars() {

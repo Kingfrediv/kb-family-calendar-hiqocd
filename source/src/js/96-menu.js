@@ -72,7 +72,7 @@ menuBackdrop.addEventListener("click", () => closeMenu(false));
 menuPanel.addEventListener(
   "click",
   ev => {
-    if (ev.target.closest && ev.target.closest(".menu-item")) {
+    if (ev.target.closest && ev.target.closest(".menu-item") && !ev.target.closest(".menu-radio")) {
       closeMenu(true);
     }
   },

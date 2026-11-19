@@ -262,20 +262,6 @@ function onCopyLinkClick() {
   openShareDialog();
 }
 
-function onExportIcs() {
-  if (!requireLicense()) {
-    return;
-  }
-  const _0x155167 = buildIcs(state.year);
-  const _0x17c39c = safeFileName((childName() ? childName() + "-" : "") + "parenting-calendar-" + state.year) + ".ics";
-  downloadBlob(
-    new Blob([_0x155167], {
-      type: "text/calendar;charset=utf-8"
-    }),
-    _0x17c39c
-  );
-  toast("Calendar file downloaded — import it into your phone calendar");
-}
 
 function onExportCsv() {
   if (!requireLicense()) {
@@ -326,25 +312,3 @@ function saveSharedHere() {
   toast("Saved to this browser");
 }
 
-function finishSetup(_0x1623dc) {
-  document.getElementById("setupOverlay").classList.remove("show");
-  state.setupComplete = true;
-  if (_0x1623dc) {
-    const _0x336664 = document.getElementById("setupChild").value.trim();
-    const _0x433642 = document.getElementById("setupP1").value.trim();
-    const _0x15d402 = document.getElementById("setupP2").value.trim();
-    if (_0x336664) {
-      state.childName = _0x336664;
-    }
-    if (_0x433642) {
-      state.p1Name = _0x433642;
-    }
-    if (_0x15d402) {
-      state.p2Name = _0x15d402;
-    }
-    state.mothersDayOwner = document.getElementById("setupMothers").value || "skip";
-    state.fathersDayOwner = document.getElementById("setupFathers").value || "skip";
-  }
-  save();
-  render();
-}

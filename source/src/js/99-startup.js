@@ -46,18 +46,14 @@ if (pendingShareKind === "c") {
 } else if (isDemoPage()) {
   document.getElementById("demoBanner").classList.add("show");
 } else if (!state.savedAt && !state.setupComplete) {
-  document.getElementById("setupChild").value = state.childName || "";
-  document.getElementById("setupP1").value = state.p1Name && state.p1Name !== "Parent 1" ? state.p1Name : "";
-  document.getElementById("setupP2").value = state.p2Name && state.p2Name !== "Parent 2" ? state.p2Name : "";
-  document.getElementById("setupMothers").value = state.mothersDayOwner || "skip";
-  document.getElementById("setupFathers").value = state.fathersDayOwner || "skip";
-  document.getElementById("setupOverlay").classList.add("show");
-  setTimeout(() => document.getElementById("setupChild").focus(), 50);
+  openSetupDialog();
 }
 
 if (kbRecovered) {
   toast("Recovered your most recent changes.");
 }
+
+applyTheme();
 
 registerServiceWorker();
 

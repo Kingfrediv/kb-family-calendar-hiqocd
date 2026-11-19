@@ -326,6 +326,7 @@ function kbSanitize(s) {
     s.summerSelected = out;
   }
   // ---- settings added in the second release
+  s.showInitials = kbBool(s.showInitials, false);
   s.region = kbOneOf(s.region, ["us", "ca", "uk", "au"], "us");
   s.longWeekends = kbBool(s.longWeekends, false);
   s.splitChristmas = kbBool(s.splitChristmas, false);

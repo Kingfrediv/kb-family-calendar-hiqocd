@@ -133,11 +133,11 @@ const axeSrc = L.fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
   await page.emulateMedia({ media: 'screen' });
 
   // ---- 17 calendar export
-  let ics = L.fs.readFileSync(await dl(page, '#btnExportIcs'), 'utf8'); let flat = ics.replace(/\r\n /g, '');
+  let ics = (await L.icsDownload(page)).text; let flat = ics.replace(/\r\n /g, '');
   check('17 no "Time: ." when exchange times are blank', !/Time: \./.test(flat) && /Exchange time not set/.test(flat));
   check('17 blank times export as all-day exchange markers', !/DTSTART;TZID/.test(flat) && (flat.match(/SUMMARY:Exchange to/g) || []).length > 20, (flat.match(/SUMMARY:Exchange to/g) || []).length + ' exchanges');
   await page.fill('#timeToP1Input', 'After school'); await page.fill('#timeToP2Input', '6:00 PM'); await page.fill('#timeHolidayInput', '9:30 AM');
-  ics = L.fs.readFileSync(await dl(page, '#btnExportIcs'), 'utf8'); flat = ics.replace(/\r\n /g, '');
+  ics = (await L.icsDownload(page)).text; flat = ics.replace(/\r\n /g, '');
   check('17 entered times export as timed events', /DTSTART;TZID=America\/New_York:\d{8}T180000/.test(flat) && /T150000/.test(flat) && /T093000/.test(flat));
   check('17 calendar file is well formed', !ics.replace(/\r\n/g, '').includes('\n') && Math.max(...ics.split('\r\n').map(l => Buffer.byteLength(l))) <= 75 && (ics.match(/BEGIN:VEVENT/g) || []).length === (ics.match(/END:VEVENT/g) || []).length);
 

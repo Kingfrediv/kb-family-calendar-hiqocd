@@ -77,7 +77,7 @@ const axeSrc = L.fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
   { const names0 = await page.textContent('#headerTitle'); check('calendars: one calendar to start, no switcher in the header', (await page.locator('#calendarSwitch').isHidden()) && (await page.locator('#calendarList .list-row').count()) === 1);
     await page.click('#btnAddCalendar'); await page.waitForSelector('#setupOverlay.show');
     check('calendars: a new one opens its set-up and starts blank with the same parents and colors', (await page.inputValue('#setupP1')) === 'Jordan' && (await page.inputValue('#setupP2')) === 'Taylor');
-    await page.fill('#setupChild', 'Riley'); await page.click('#btnSetupStart');
+    await page.fill('#setupChild', 'Riley'); await page.click('#btnSetupNext'); await page.click('#btnSetupNext'); await page.click('#btnSetupStart');
     check('calendars: the new calendar is open, named, and has no schedule yet', (await page.textContent('#headerTitle')).includes('Riley') && /not set yet/.test((await L.stats(page)).base));
     check('calendars: the header now has a switcher and the list shows both', (await page.locator('#calendarSwitch').isVisible()) && (await page.locator('#calendarList .list-row').count()) === 2 && (await page.$$eval('#calendarSwitch option', o => o.map(x => x.textContent).join())) === 'Avery,Riley');
     await page.click('.preset-btn[data-preset="2-2-3"]'); await page.selectOption('#yearSelect', String(Y)); await L.setDay(page, '2026-03-04', 'both'); await page.fill('#childNameInput', 'Riley');

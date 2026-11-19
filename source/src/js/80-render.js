@@ -601,6 +601,10 @@ function renderNow() {
   document.getElementById("statTwoYearAvg").textContent = state.scheduleUnset ? "—" : `${_0x1aba20}% / ${_0x6e885c}%`;
   document.getElementById("statTwoYearSub").textContent =
     `${state.year} + ${state.year + 1} (${_0x1ee166} / ${_0x527835})`;
+  drawTonight();
+  drawTotals(_0x1d36c1);
+  drawPlansList();
+  drawPrintExtras();
   const _0x2a517d = _0x49b89e - _0x35b20f * 0.5;
   const _0x31281c = _0x40722f - _0x35b20f * 0.5;
   document.getElementById("barP1").style.width = `${((_0x2a517d / _0x3142b2) * 100).toFixed(1)}%`;
@@ -701,7 +705,7 @@ function renderNow() {
       } else if (_0x55b6ec.splitType === "p1-to-p2") {
         _0x1701d0 = `→ ${_0x527835}`;
       }
-      _0x4d5926.innerHTML = `<div class="day-top"><span>${_0x55b6ec.d}</span><span class="day-icons">${esc(_0x1d027d)}${dayNote || dayPlans.length ? '<span class="day-note-dot" aria-hidden="true"></span>' : ""}</span></div><div class="day-label">${esc(_0x1701d0)}</div>`;
+      _0x4d5926.innerHTML = `<div class="day-top"><span>${_0x55b6ec.d}<span class="day-init" aria-hidden="true">${esc(ownerInitial(_0x55b6ec.owner))}</span></span><span class="day-icons">${esc(_0x1d027d)}${dayNote || dayPlans.length ? '<span class="day-note-dot" aria-hidden="true"></span>' : ""}</span></div><div class="day-label">${esc(_0x1701d0)}</div>`;
       _0x4d5926.onclick = ev => onDayClick(_0x55b6ec.ds, ev);
       _0x4d5926.onkeydown = _0x168908 => {
         if (

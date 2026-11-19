@@ -76,7 +76,8 @@ function defaultState() {
     cycleAnchor: "2026-01-04",
     // ---- third release
     dayNotes: {},
-    activities: []
+    activities: [],
+    showInitials: false
   };
 }
 

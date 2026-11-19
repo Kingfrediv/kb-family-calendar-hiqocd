@@ -72,13 +72,20 @@ function applyColors() {
   const _0x34145f = state.p2Color || "#16a34a";
   const _0x7b3501 = state.headerColor || "#18181b";
   _0x1512a5.setProperty("--p1-solid", _0x241e90);
-  _0x1512a5.setProperty("--p1-border", darken(_0x241e90, 0.8));
-  _0x1512a5.setProperty("--p1-bg", lighten(_0x241e90, 0.74));
-  _0x1512a5.setProperty("--p1-text", darken(_0x241e90, 0.34));
+  _0x1512a5.setProperty("--p1-border-l", darken(_0x241e90, 0.8));
+  _0x1512a5.setProperty("--p1-bg-l", lighten(_0x241e90, 0.74));
+  _0x1512a5.setProperty("--p1-text-l", darken(_0x241e90, 0.34));
   _0x1512a5.setProperty("--p2-solid", _0x34145f);
-  _0x1512a5.setProperty("--p2-border", darken(_0x34145f, 0.82));
-  _0x1512a5.setProperty("--p2-bg", lighten(_0x34145f, 0.8));
-  _0x1512a5.setProperty("--p2-text", darken(_0x34145f, 0.42));
+  _0x1512a5.setProperty("--p2-border-l", darken(_0x34145f, 0.82));
+  _0x1512a5.setProperty("--p2-bg-l", lighten(_0x34145f, 0.8));
+  _0x1512a5.setProperty("--p2-text-l", darken(_0x34145f, 0.42));
+  // dark theme: a deep tint of the same color, its own color as the edge, a pale tint for the text
+  _0x1512a5.setProperty("--p1-bg-d", darken(_0x241e90, 0.3));
+  _0x1512a5.setProperty("--p1-border-d", _0x241e90);
+  _0x1512a5.setProperty("--p1-text-d", lighten(_0x241e90, 0.82));
+  _0x1512a5.setProperty("--p2-bg-d", darken(_0x34145f, 0.34));
+  _0x1512a5.setProperty("--p2-border-d", _0x34145f);
+  _0x1512a5.setProperty("--p2-text-d", lighten(_0x34145f, 0.82));
   _0x1512a5.setProperty("--header-bg", _0x7b3501);
   const _0x1ac8bc = luminance(_0x7b3501) > 0.58;
   _0x1512a5.setProperty("--header-text", _0x1ac8bc ? "#18181b" : lighten(_0x241e90, 0.65));
@@ -266,6 +273,11 @@ function kbCloseDialog(el) {
     finishSetup(false);
     return true;
   }
+  if (el.id === "icsOverlay") {
+    el.classList.remove("show");
+    kbReturnFocus();
+    return true;
+  }
   if (el.id === "daySheet") {
     closeDaySheet();
     return true;
@@ -309,4 +321,31 @@ function formatTime12(hhmm) {
   }
   const h = Number(m[1]);
   return `${h % 12 === 0 ? 12 : h % 12}:${m[2]} ${h < 12 ? "AM" : "PM"}`;
+}
+
+// ---- the letters shown on days when "initials & pattern" is on
+function nameStart(name, count) {
+  const chars = Array.from((name || "").trim());
+  return chars
+    .slice(0, count)
+    .join("")
+    .toUpperCase();
+}
+
+function ownerInitial(owner) {
+  if (owner === "none") {
+    return "";
+  }
+  let a = nameStart(p1Name(), 1) || "1";
+  let b = nameStart(p2Name(), 1) || "2";
+  if (a === b) {
+    // two parents with the same first letter are told apart by two letters, and by 1 and 2 if that is not enough either
+    a = nameStart(p1Name(), 2);
+    b = nameStart(p2Name(), 2);
+    if (a === b) {
+      a = "1";
+      b = "2";
+    }
+  }
+  return owner === "p1" ? a : owner === "p2" ? b : `${a}+${b}`;
 }
