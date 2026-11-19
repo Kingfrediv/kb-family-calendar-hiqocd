@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node build.mjs",
     "build:plain": "node build.mjs --plain",
-    "release": "node build.mjs --out ../index.html",
+    "release": "node build.mjs --release",
     "test": "node build.mjs && node tests/run-all.js",
     "check:release": "node build.mjs --check ../index.html",
     "test:release": "KB_INDEX=../index.html KB_DIST=.. node tests/run-all.js"

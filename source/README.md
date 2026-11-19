@@ -41,6 +41,21 @@ Playwright with Chromium must be available (`npx playwright install chromium`). 
 - **Obfuscation** needs javascript-obfuscator 5.x. Version 4 generates a slower string lookup that made every tap about 40% slower.
 - The service worker's cache name is the build id, so every release replaces the previous cache. Pages are fetched network-first, so a release reaches people the next time they open the calendar online.
 
+## Spanish
+
+English is the source text everywhere in the code. When the language is Spanish (the browser says so, or the choice in the Share & export menu), `src/js/47-i18n.js` translates what is on the screen as it is drawn:
+
+- `src/js/48-i18n-es.js` is the dictionary. Keys are the English text exactly as it appears (white space collapsed); a `#` stands for a number, so `"# (#% of nights)"` covers every count. Names of months and days come from the Spanish lists in `00-constants.js`.
+- `src/js/49-i18n-es-rules.js` has patterns for sentences with names and dates in them ("Fri, 6 mar: Avery overnight — Base (Avery)").
+- Text a person typed (names, notes, plans) is never looked up, except where it happens to equal a phrase in the dictionary. Anything without a translation stays in English, so a gap is never a blank.
+- Text that leaves the page (phone-calendar file, spreadsheet, share message, confirm boxes) is translated where it is made, with `tr()`.
+- `node tests/i18n-tour.js` walks through every screen, dialog and message in Spanish and lists what has no translation yet. `v9_spanish.js` requires that list to be empty. When you add English text, run it and add the Spanish.
+- The Spanish was written without a native reviewer. Have one read it before it is sold.
+
+## Free demo
+
+`index.html?demo` opens a made-up family (`demoFamilyState()` in `10-defaults.js`) that cannot be edited, saved or exported, whoever opens it, and never touches stored data. The licence screen links to it.
+
 ## Tests
 
 | Suite | Covers |
@@ -49,5 +64,10 @@ Playwright with Chromium must be available (`npx playwright install chromium`). 
 | `v2_regress.js` | Holiday dates for 2020 to 2045, 12 time zones, license handling, first run on desktop and phone. |
 | `v3_compat.js` | Links and saved calendars from earlier releases open unchanged. |
 | `v4_foundation.js` | Share & export menu, Today, backup and restore, offline and installable app. |
+| `v5_schedule.js` | Custom cycles, presets, break dates, regions, moving-date holidays, holiday rules. |
+| `v6_data.js` | Day sheet, notes and plans, selecting several days, several calendars, change history, compare-and-apply. |
+| `v7_output.js` | Phone-calendar file (years, reminders, time zones), printed report, themes, initials and patterns. |
+| `v8_usability.js` | Phone drawer and layout, Tonight, swipe, "Saved" cue, Undo on resets, year rollover, dates in words, free demo. |
+| `v9_spanish.js` | Language choice, Spanish files and links, phone layout and accessibility in Spanish, and the tour that finds untranslated text. |
 
-`npm test` runs them in parallel; `node tests/run-all.js v4` runs one.
+`npm test` runs them four at a time (`KB_JOBS=n` changes that); `node tests/run-all.js v4` runs one.

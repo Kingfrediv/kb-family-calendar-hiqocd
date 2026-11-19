@@ -45,6 +45,8 @@ async function stubGumroad(ctx, mode = 'ok', counter = { n: 0, uses: 0 }) {
 async function newCtx(browser, opts = {}) {
   // service workers are blocked unless a test asks for them, so one test's cache can never leak into another
   const ctx = await browser.newContext({ viewport: { width: 1400, height: 900 }, acceptDownloads: true, serviceWorkers: 'block', ...opts });
+  // generous: key derivation for locked links is slow when several browsers share a small machine
+  ctx.setDefaultTimeout(90000);
   return ctx;
 }
 

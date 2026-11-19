@@ -3,7 +3,7 @@
 //  - icons and the manifest: cache first
 //  - everything on another site (the license check at Gumroad, for one) is left alone and goes straight to the network
 // The cache name changes with every build, which throws away the previous release's copy.
-const CACHE = "kb-calendar-c58604be97";
+const CACHE = "kb-calendar-16dbbe8c44";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"];
 
 self.addEventListener("install", event => {
