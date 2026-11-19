@@ -10,28 +10,43 @@ const LICENSE_RECHECK_MS = 604800000;
 
 const GUMROAD_VERIFY_URL = "https://api.gumroad.com/v2/licenses/verify";
 
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December"
-];
+// ---- language: English, or Spanish when chosen in the menu (or when the browser is set to Spanish)
+const LANG = (() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem("kb_prefs_v1") || "{}").lang;
+    if (saved === "es" || saved === "en") {
+      return saved;
+    }
+  } catch {}
+  return /^es\b/i.test((navigator.language || "").toString()) ? "es" : "en";
+})();
 
-const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTH_NAMES =
+  LANG === "es"
+    ? ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+    : ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-const DOW_2 = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const MONTH_SHORT =
+  LANG === "es"
+    ? ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+    : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-const DOW_3 = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DOW_2 = LANG === "es" ? ["D", "L", "M", "X", "J", "V", "S"] : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
-const DOW_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DOW_3 = LANG === "es" ? ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"] : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const DOW_FULL =
+  LANG === "es"
+    ? ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]
+    : ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+// "June 5" or "5 de junio"; short: "Jun 5" or "5 jun"
+function monthDay(monthIndex, day, short) {
+  if (LANG === "es") {
+    return short ? `${day} ${MONTH_SHORT[monthIndex].toLowerCase()}` : `${day} de ${MONTH_NAMES[monthIndex].toLowerCase()}`;
+  }
+  return `${short ? MONTH_SHORT[monthIndex] : MONTH_NAMES[monthIndex]} ${day}`;
+}
 
 const DEFAULT_NOTES =
   "• Phone / Video Chat: Reasonable daily call or video chat on non-custodial evenings.\n• Snow Days & Teacher Workdays: Follow the regular overnight schedule unless agreed otherwise.\n• Travel Notice: At least 14 days' notice with itinerary if traveling out of state.\n• Right of First Refusal: Offer the other parent the first option before using a babysitter for 4+ hours.";
@@ -81,7 +96,7 @@ function isValidMonthDay(_0x1eb760, _0x3e6d31) {
 
 function formatMonthDay(_0x275dcc, _0x1f4eb5) {
   if (isValidMonthDay(_0x275dcc, _0x1f4eb5)) {
-    return `${MONTH_SHORT[Number(_0x275dcc)]} ${Number(_0x1f4eb5)}`;
+    return monthDay(Number(_0x275dcc), Number(_0x1f4eb5), true);
   } else {
     return "";
   }

@@ -81,6 +81,11 @@
               <button type="button" class="menu-item menu-radio" role="menuitemradio" aria-checked="false" id="themeLight" data-theme-choice="light">Light</button>
               <button type="button" class="menu-item menu-radio" role="menuitemradio" aria-checked="false" id="themeDark" data-theme-choice="dark">Dark</button>
             </div>
+            <div class="menu-label" role="presentation">Language / Idioma</div>
+            <div role="group" aria-label="Language / Idioma">
+              <button type="button" class="menu-item menu-radio" role="menuitemradio" aria-checked="true" data-lang-choice="en" data-no-tr>English</button>
+              <button type="button" class="menu-item menu-radio" role="menuitemradio" aria-checked="false" data-lang-choice="es" data-no-tr>Español</button>
+            </div>
             <div class="menu-label" role="presentation" id="menuAppLabel">App</div>
             <button type="button" class="menu-item" role="menuitem" id="btnInstall" hidden>📲 Install app</button>
             <div class="menu-note" id="privacyNote">
@@ -269,21 +274,21 @@
         <div class="card">
           <h2 class="section-title">🎂 Family Birthdays</h2>
           <div class="control-group">
-            <label id="lblBdayChild"><span class="lbl-child">Child</span>'s Birthday (All Together)</label>
+            <label id="lblBdayChild">Birthday (all together): <span class="lbl-child">Child</span></label>
             <div class="bday-row">
               <select id="bdayChildMonth" aria-labelledby="lblBdayChild" aria-label="Child birthday month"></select
               ><select id="bdayChildDay" aria-label="Child birthday day"></select>
             </div>
           </div>
           <div class="control-group">
-            <label id="lblBdayP1"><span class="lbl-p1">Parent 1</span>'s Birthday</label>
+            <label id="lblBdayP1">Birthday: <span class="lbl-p1">Parent 1</span></label>
             <div class="bday-row">
               <select id="bdayP1Month" aria-labelledby="lblBdayP1" aria-label="Parent 1 birthday month"></select
               ><select id="bdayP1Day" aria-label="Parent 1 birthday day"></select>
             </div>
           </div>
           <div class="control-group">
-            <label id="lblBdayP2"><span class="lbl-p2">Parent 2</span>'s Birthday</label>
+            <label id="lblBdayP2">Birthday: <span class="lbl-p2">Parent 2</span></label>
             <div class="bday-row">
               <select id="bdayP2Month" aria-labelledby="lblBdayP2" aria-label="Parent 2 birthday month"></select
               ><select id="bdayP2Day" aria-label="Parent 2 birthday day"></select>

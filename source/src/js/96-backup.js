@@ -95,8 +95,12 @@ function restoreBackupText(text) {
     return;
   }
   const names = parsed.calendars.map(c => calendarDisplayName(c.id, c.state, 1)).join(", ");
-  const when = parsed.exportedAt ? " from " + parsed.exportedAt.slice(0, 10) : "";
-  if (!confirm("Replace everything on this device with the backup" + when + "?\n\nCalendars in the backup: " + names + ".\n\nYou can undo this right after.")) {
+  const when = parsed.exportedAt ? (LANG === "es" ? " del " : " from ") + parsed.exportedAt.slice(0, 10) : "";
+  const askText =
+    LANG === "es"
+      ? "¿Reemplazar todo lo de este dispositivo por la copia de seguridad" + when + "?\n\nCalendarios en la copia: " + names + ".\n\nPuedes deshacerlo justo después."
+      : "Replace everything on this device with the backup" + when + "?\n\nCalendars in the backup: " + names + ".\n\nYou can undo this right after.";
+  if (!confirm(askText)) {
     return;
   }
   // keep what is here now, so the restore can be undone

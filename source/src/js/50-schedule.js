@@ -123,7 +123,7 @@ function summerChips() {
         month: m,
         start,
         end,
-        label: `${MONTH_SHORT[m]} ${start}${end > start ? "–" + end : ""}`
+        label: monthDay(m, `${start}${end > start ? "–" + end : ""}`, true)
       });
     }
   }
@@ -143,7 +143,7 @@ function summerWeekSelected(month0, day) {
 function summerRangeText() {
   const [sm, sd] = monthDayParts(state.summerStart);
   const [em, ed] = monthDayParts(state.summerEnd);
-  return `${MONTH_SHORT[sm]} ${sd} – ${MONTH_SHORT[em]} ${ed}`;
+  return `${monthDay(sm, sd, true)} – ${monthDay(em, ed, true)}`;
 }
 
 // ---- school calendar entries -----------------------------------------------------------------

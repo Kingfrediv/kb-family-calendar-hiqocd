@@ -14,9 +14,9 @@ const axeSrc = L.fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
   check('menu: closed at start, button says it has a popup', (await page.locator('#shareMenu').isHidden()) && (await page.getAttribute('#btnMenuShare', 'aria-haspopup')) === 'menu' && (await page.getAttribute('#btnMenuShare', 'aria-expanded')) === 'false');
   await page.click('#btnMenuShare');
   check('menu: opens, first item is focused, state is announced', (await page.locator('#shareMenu').isVisible()) && (await active(page)) === 'btnCopyLink' && (await page.getAttribute('#btnMenuShare', 'aria-expanded')) === 'true', await active(page));
-  const order = []; for (let i = 0; i < 12; i++) { order.push(await active(page)); await page.keyboard.press('ArrowDown'); }
-  check('menu: arrow keys walk every item and wrap round', order.slice(0, 11).join() === 'btnCopyLink,btnSaveBakedHtml,btnExportIcs,btnPrint,btnExportCsv,btnBackup,btnRestore,btnHistory,themeAuto,themeLight,themeDark' && order[11] === 'btnCopyLink', order.join());
-  await page.keyboard.press('End'); check('menu: End goes to the last item', (await active(page)) === 'themeDark', await active(page));
+  const order = []; for (let i = 0; i < 14; i++) { order.push(await active(page)); await page.keyboard.press('ArrowDown'); }
+  check('menu: arrow keys walk every item and wrap round', order.slice(0, 13).join() === 'btnCopyLink,btnSaveBakedHtml,btnExportIcs,btnPrint,btnExportCsv,btnBackup,btnRestore,btnHistory,themeAuto,themeLight,themeDark,BUTTON,BUTTON' && order[13] === 'btnCopyLink', order.join());
+  await page.keyboard.press('End'); check('menu: End goes to the last item (the language buttons)', (await page.evaluate(() => document.activeElement.dataset.langChoice)) === 'es', await active(page));
   await page.keyboard.press('Escape');
   check('menu: Escape closes it and returns focus to the button', (await page.locator('#shareMenu').isHidden()) && (await active(page)) === 'btnMenuShare');
   await page.click('#btnMenuShare'); await page.mouse.click(5, 450);

@@ -86,7 +86,7 @@ async function copyText(_0x5e701c) {
       return true;
     }
   } catch {}
-  window.prompt("Copy this share link:", _0x5e701c);
+  window.prompt(tr("Copy this share link:"), _0x5e701c);
   return false;
 }
 
@@ -294,7 +294,7 @@ function saveSharedHere() {
   } catch {}
   if (
     (_0x128847 || kbIsCopy()) &&
-    !confirm("Replace the calendar currently saved in this browser with this shared schedule?")
+    !confirm(tr("Replace the calendar currently saved in this browser with this shared schedule?"))
   ) {
     return;
   }

@@ -99,7 +99,7 @@ function buildIcs(options) {
   const zone = options.zone || Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York";
   const tz = vtimezoneFor(zone, first, last);
   const child = childName();
-  const calName = (child ? `${child} ` : "") + "Parenting Calendar " + (first === last ? first : `${first}–${last}`);
+  const calName = (child ? `${child} ` : "") + tr("Parenting Calendar") + " " + (first === last ? first : `${first}–${last}`);
   const stamp = icsUtcStamp(new Date());
   const idBase = state.fileId || "spc";
   const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Kingdom Building//Parenting Calendar//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:" + icsEscape(calName)];
@@ -136,20 +136,20 @@ function buildIcs(options) {
       const after = addDaysParts(lastDay.y, lastDay.m0, lastDay.d, 1);
       const run = days.slice(i, j);
       const holidays = run.filter(d => d.isHoliday).map(d => d.reason);
-      const notes = options.plans ? run.filter(d => state.dayNotes[d.ds]).slice(0, 6).map(d => `Note, ${shortDate(d.ds)}: ${state.dayNotes[d.ds]}`) : [];
-      const description = [`Overnight: ${ownerLabel(owner)}`];
+      const notes = options.plans ? run.filter(d => state.dayNotes[d.ds]).slice(0, 6).map(d => `${tr("Note")}, ${shortDate(d.ds)}: ${state.dayNotes[d.ds]}`) : [];
+      const description = [tr(`Overnight: ${ownerLabel(owner)}`)];
       if (holidays.length) {
-        description.push("Events: " + holidays.join("; "));
+        description.push(tr("Events:") + " " + holidays.map(h => tr(h)).join("; "));
       }
       if (state.exchangeLocation) {
-        description.push("Exchange location: " + state.exchangeLocation);
+        description.push(tr("Exchange location:") + " " + state.exchangeLocation);
       }
       event({
         UID: icsEscape(`block-${idBase}-${startDay.ds}@parenting-calendar`),
         DTSTAMP: stamp,
         "DTSTART;VALUE=DATE": icsDate(startDay.y, startDay.m0, startDay.d),
         "DTEND;VALUE=DATE": icsDate(after.y, after.m0, after.d),
-        SUMMARY: icsEscape(owner === "both" ? `Together${holidays.length ? " — " + holidays[0] : ""}` : `Overnight with ${ownerLabel(owner)}${holidays.length ? " — " + holidays[0] : ""}`),
+        SUMMARY: icsEscape(tr(owner === "both" ? `Together${holidays.length ? " — " + holidays[0] : ""}` : `Overnight with ${ownerLabel(owner)}${holidays.length ? " — " + holidays[0] : ""}`)),
         DESCRIPTION: icsEscape(description.concat(notes).join("\n")),
         TRANSP: "TRANSPARENT"
       });
@@ -172,17 +172,17 @@ function buildIcs(options) {
     const base = {
       UID: icsEscape(`exch-${idBase}-${day.ds}@parenting-calendar`),
       DTSTAMP: stamp,
-      SUMMARY: icsEscape(`Exchange ${to}`),
+      SUMMARY: icsEscape(tr(`Exchange ${to}`)),
       LOCATION: icsEscape(state.exchangeLocation || "")
     };
     if (!String(time.label || "").trim()) {
       // no time entered: mark the day instead of inventing a clock time
       const next = addDaysParts(day.y, day.m0, day.d, 1);
-      event({ ...base, "DTSTART;VALUE=DATE": icsDate(day.y, day.m0, day.d), "DTEND;VALUE=DATE": icsDate(next.y, next.m0, next.d), DESCRIPTION: icsEscape(`Handoff ${to}. Exchange time not set.${day.reason ? ` ${day.reason}` : ""}`), TRANSP: "TRANSPARENT" }, icsAlarm(options.alarm, true, `Exchange ${to}`));
+      event({ ...base, "DTSTART;VALUE=DATE": icsDate(day.y, day.m0, day.d), "DTEND;VALUE=DATE": icsDate(next.y, next.m0, next.d), DESCRIPTION: icsEscape(tr(`Handoff ${to}. Exchange time not set.`) + (day.reason ? " " + tr(day.reason) : "")), TRANSP: "TRANSPARENT" }, icsAlarm(options.alarm, true, tr(`Exchange ${to}`)));
       return;
     }
     const endMinutes = Math.min(time.h * 60 + time.m + 30, 23 * 60 + 59);
-    event({ ...base, [dtstart]: icsDateTime(day.y, day.m0, day.d, time.h, time.m), [dtend]: icsDateTime(day.y, day.m0, day.d, Math.floor(endMinutes / 60), endMinutes % 60), DESCRIPTION: icsEscape(`Handoff ${to}. Time: ${time.label}${day.reason ? `. ${day.reason}` : ""}`) }, icsAlarm(options.alarm, false, `Exchange ${to}`));
+    event({ ...base, [dtstart]: icsDateTime(day.y, day.m0, day.d, time.h, time.m), [dtend]: icsDateTime(day.y, day.m0, day.d, Math.floor(endMinutes / 60), endMinutes % 60), DESCRIPTION: icsEscape(tr(`Handoff ${to}. Time:`) + " " + time.label + (day.reason ? ". " + tr(day.reason) : "")) }, icsAlarm(options.alarm, false, tr(`Exchange ${to}`)));
   });
 
   // plans
@@ -191,7 +191,7 @@ function buildIcs(options) {
       .filter(a => years.indexOf(Number(a.date.slice(0, 4))) >= 0)
       .forEach(plan => {
         const [y, m, d] = plan.date.split("-").map(Number);
-        const common = { UID: icsEscape(`plan-${idBase}-${plan.id}@parenting-calendar`), DTSTAMP: stamp, SUMMARY: icsEscape(plan.title), DESCRIPTION: icsEscape(child ? `Plan for ${child}` : "") };
+        const common = { UID: icsEscape(`plan-${idBase}-${plan.id}@parenting-calendar`), DTSTAMP: stamp, SUMMARY: icsEscape(plan.title), DESCRIPTION: icsEscape(child ? tr(`Plan for ${child}`) : "") };
         if (plan.time) {
           const [h, min] = plan.time.split(":").map(Number);
           const end = new Date(Date.UTC(y, m - 1, d, h + 1, min));

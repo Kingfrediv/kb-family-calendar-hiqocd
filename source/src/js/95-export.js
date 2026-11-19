@@ -130,23 +130,23 @@ function csvCell(_0x14a55e) {
 
 function buildCsv(_0x28a3ab) {
   const { days: _0x3af2ea } = buildYear(_0x28a3ab);
-  const _0x19fa7a = ["Date", "Weekday", "Parent", "Event", "Notes"];
+  const _0x19fa7a = ["Date", "Weekday", "Parent", "Event", "Notes"].map(h => tr(h));
   const _0x27116d = [_0x19fa7a.map(csvCell).join(",")];
   _0x3af2ea.forEach(_0x3fdb1c => {
     const _0x500999 = [];
     if (_0x3fdb1c.splitType) {
-      _0x500999.push("Handoff " + _0x3fdb1c.reason);
+      _0x500999.push(tr("Handoff " + _0x3fdb1c.reason));
     }
     if (_0x3fdb1c.customSchoolLabel) {
       _0x500999.push(_0x3fdb1c.customSchoolLabel);
     }
     if (_0x3fdb1c.isOverride) {
-      _0x500999.push("Custom override");
+      _0x500999.push(tr("Custom override"));
     }
     if (_0x3fdb1c.isHoliday && _0x3fdb1c.reason) {
     }
     _0x27116d.push(
-      [_0x3fdb1c.ds, DOW_3[_0x3fdb1c.dow], ownerLabel(_0x3fdb1c.owner), _0x3fdb1c.reason || "", _0x500999.join("; ")]
+      [_0x3fdb1c.ds, DOW_3[_0x3fdb1c.dow], tr(ownerLabel(_0x3fdb1c.owner)), tr(_0x3fdb1c.reason || "", true), _0x500999.join("; ")]
         .map(csvCell)
         .join(",")
     );

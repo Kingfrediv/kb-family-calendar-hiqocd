@@ -426,7 +426,7 @@ document.getElementById("btnResetHolidays").onclick = () => {
 };
 
 document.getElementById("btnResetAll").onclick = () => {
-  if (!confirm("Reset all names, days, holidays, and notes back to the blank default template?")) {
+  if (!confirm(tr("Reset all names, days, holidays, and notes back to the blank default template?"))) {
     return;
   }
   const _0x55189c = currentStorageKey();

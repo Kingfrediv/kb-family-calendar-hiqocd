@@ -224,7 +224,7 @@ function drawCustomHolidayList() {
   (state.customHolidays || []).forEach(_0x4a22ff => {
     const _0x13621c = document.createElement("div");
     _0x13621c.className = "list-row";
-    _0x13621c.innerHTML = `<span>${esc(_0x4a22ff.emoji || "✨")} <strong>${esc(_0x4a22ff.name)}</strong> (${esc(MONTH_SHORT[_0x4a22ff.m])} ${esc(_0x4a22ff.d)})</span>`;
+    _0x13621c.innerHTML = `<span>${esc(_0x4a22ff.emoji || "✨")} <strong>${esc(_0x4a22ff.name)}</strong> (${esc(monthDay(_0x4a22ff.m, _0x4a22ff.d, true))})</span>`;
     const _0x1d726b = document.createElement("button");
     _0x1d726b.className = "btn btn-sm";
     _0x1d726b.textContent = "✕";
@@ -614,7 +614,7 @@ function renderNow() {
   document.getElementById("barP2").style.width = `${((_0x31281c / _0x3142b2) * 100).toFixed(1)}%`;
   const _0x46d7e9 = _0x1d36c1
     .filter(_0x11fdfd => _0x11fdfd.owner === "both")
-    .map(_0xa8facf => `${MONTH_SHORT[_0xa8facf.m0]} ${_0xa8facf.d}${_0xa8facf.reason ? ` (${_0xa8facf.reason})` : ""}`);
+    .map(_0xa8facf => `${monthDay(_0xa8facf.m0, _0xa8facf.d, true)}${_0xa8facf.reason ? ` (${_0xa8facf.reason})` : ""}`);
   document.getElementById("statBothSub").textContent = _0x46d7e9.length
     ? `${_0x46d7e9.join("; ")} · Split 0.5 / 0.5 each`
     : "No together days this year";

@@ -53,7 +53,7 @@ function explainDay(rec) {
   } else {
     why = state.scheduleUnset ? "No schedule has been set yet." : "The usual schedule.";
   }
-  return (why + " " + exchangeText(rec)).trim();
+  return [why, exchangeText(rec)];
 }
 
 function openDaySheet(ds) {
@@ -86,7 +86,10 @@ function drawDaySheet() {
   }
   const editable = isLicensed();
   document.getElementById("daySheetTitle").textContent = `${longDate(sheetDate)}, ${rec.y}`;
-  document.getElementById("daySheetWhy").textContent = `${rec.owner === "none" ? "Nobody has this overnight yet." : ownerLabel(rec.owner) + " has the overnight."} ${explainDay(rec)}`;
+  setSentences(document.getElementById("daySheetWhy"), [
+    rec.owner === "none" ? "Nobody has this overnight yet." : ownerLabel(rec.owner) + " has the overnight.",
+    ...explainDay(rec)
+  ]);
   document.getElementById("dayEdit").hidden = !editable;
   const names = { p1: p1Name(), p2: p2Name() };
   ["p1", "p2", "both"].forEach(owner => {
@@ -232,7 +235,7 @@ document.getElementById("btnDaySelectMore").onclick = () => {
 document.getElementById("btnDayRequest").onclick = () => {
   const ds = sheetDate;
   closeDaySheet(false);
-  openShareDialog({ message: `Could we change ${shortDate(ds)}?` });
+  openShareDialog({ message: tr(`Could we change ${shortDate(ds)}?`) });
 };
 document.getElementById("daySheet").addEventListener("mousedown", ev => {
   if (ev.target === ev.currentTarget) {

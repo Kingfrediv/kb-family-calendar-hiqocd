@@ -156,7 +156,7 @@ function drawHistory() {
     const when = document.createElement("time");
     const date = new Date(entry.t);
     when.dateTime = date.toISOString();
-    when.textContent = `${MONTH_SHORT[date.getMonth()]} ${date.getDate()}, ${formatTime12(pad2(date.getHours()) + ":" + pad2(date.getMinutes()))}${entry.who ? " · " + ownerLabel(entry.who) : ""}`;
+    when.textContent = `${monthDay(date.getMonth(), date.getDate(), true)}, ${formatTime12(pad2(date.getHours()) + ":" + pad2(date.getMinutes()))}${entry.who ? " · " + ownerLabel(entry.who) : ""}`;
     item.appendChild(when);
     item.appendChild(document.createTextNode(entry.text));
     list.appendChild(item);
@@ -183,7 +183,7 @@ document.getElementById("btnHistory").onclick = openHistory;
 document.getElementById("btnHistoryClose").onclick = () => kbCloseDialog(document.getElementById("historyOverlay"));
 document.getElementById("actorSelect").onchange = ev => writePref("actor", ev.target.value);
 document.getElementById("btnHistoryClear").onclick = () => {
-  if (confirm("Clear the change history for this calendar?")) {
+  if (confirm(tr("Clear the change history for this calendar?"))) {
     writeHistory(state.fileId, []);
     drawHistory();
   }

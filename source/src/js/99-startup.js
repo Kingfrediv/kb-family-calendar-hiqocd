@@ -5,6 +5,8 @@ if (pendingShareKind) {
   }
 }
 
+startTranslator();
+
 fillYearMonthSelects();
 
 drawSummer();

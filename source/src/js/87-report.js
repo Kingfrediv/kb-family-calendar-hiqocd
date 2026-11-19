@@ -125,7 +125,7 @@ function drawPlansList() {
 
 function todayText() {
   const now = new Date();
-  return `${MONTH_NAMES[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+  return `${monthDay(now.getMonth(), now.getDate(), false)}, ${now.getFullYear()}`;
 }
 
 function drawPrintExtras() {

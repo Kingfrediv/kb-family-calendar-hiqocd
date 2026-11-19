@@ -116,6 +116,21 @@ function toast(message, action) {
   toast._t = setTimeout(() => box.classList.remove("show"), action ? 9000 : 3200);
 }
 
+// Fill an element with sentences, each in its own span, so each can be translated on its own
+function setSentences(el, sentences) {
+  el.textContent = "";
+  sentences
+    .filter(Boolean)
+    .forEach((text, i) => {
+      if (i) {
+        el.appendChild(document.createTextNode(" "));
+      }
+      const span = document.createElement("span");
+      span.textContent = text;
+      el.appendChild(span);
+    });
+}
+
 function esc(_0x265182) {
   return String(_0x265182 || "").replace(
     /[&<>"']/g,
@@ -298,19 +313,19 @@ function kbCloseDialog(el) {
 // ---- plain-language dates and times ("Wednesday, March 4", "Wed, Mar 4", "3:30 PM")
 function longDate(ds) {
   const d = parseDateStr(ds);
-  return `${DOW_FULL[d.getDay()]}, ${MONTH_NAMES[d.getMonth()]} ${d.getDate()}`;
+  return `${DOW_FULL[d.getDay()]}, ${monthDay(d.getMonth(), d.getDate(), false)}`;
 }
 
 function shortDate(ds) {
   const d = parseDateStr(ds);
-  return `${DOW_3[d.getDay()]}, ${MONTH_SHORT[d.getMonth()]} ${d.getDate()}`;
+  return `${DOW_3[d.getDay()]}, ${monthDay(d.getMonth(), d.getDate(), true)}`;
 }
 
 // "Mar 4 – Mar 6" for a run of days, or "Mar 4" for one
 function dateRangeText(first, last) {
   const a = parseDateStr(first);
   const b = parseDateStr(last);
-  const one = d => `${MONTH_SHORT[d.getMonth()]} ${d.getDate()}`;
+  const one = d => monthDay(d.getMonth(), d.getDate(), true);
   return first === last ? one(a) : `${one(a)} – ${one(b)}`;
 }
 

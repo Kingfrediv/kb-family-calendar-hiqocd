@@ -110,7 +110,7 @@ function deleteCalendar(id, name) {
   if (!canManageCalendars() || id === "") {
     return;
   }
-  if (!confirm(`Delete the calendar “${name}” from this device?\n\nMake a backup first if you might want it back. This cannot be undone.`)) {
+  if (!confirm(LANG === "es" ? `¿Eliminar el calendario «${name}» de este dispositivo?\n\nHaz primero una copia de seguridad si podrías querer recuperarlo. No se puede deshacer.` : `Delete the calendar “${name}” from this device?\n\nMake a backup first if you might want it back. This cannot be undone.`)) {
     return;
   }
   removeCalendarSlot(id);
