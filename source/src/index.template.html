@@ -36,6 +36,7 @@
         <div class="brand-name">Kingdom Building</div>
         <h1 id="headerTitle">🐝 Shared Parenting Schedule</h1>
         <div class="subtitle" id="headerSubtitle">2026 Parenting Calendar • Overnights, Holidays, School Breaks &amp; Birthdays</div>
+        <div class="save-status no-print" id="saveStatus" role="status" aria-live="polite"></div>
       </div>
       <div class="header-actions">
         <button type="button" class="btn btn-dark" id="btnToggleSidebar" aria-label="Hide settings">✕ Hide Settings</button>
@@ -119,8 +120,29 @@
       schedule.
       <div class="banner-actions"><button type="button" class="btn btn-accent" id="btnStartOwnCalendar">Start my own calendar</button></div>
     </div>
+    <div class="demo-banner no-print" id="tourBanner" role="status">
+      <strong>Free demo, with a made-up family.</strong> Look around: tap any day, switch months, try the dark theme. Nothing is saved and
+      nothing can be changed here.
+      <div class="banner-actions">
+        <a
+          class="btn btn-accent"
+          id="btnTourBuy"
+          data-license-buy
+          href="https://maysiv.gumroad.com/l/cihrf"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Get my own calendar</a
+        >
+        <a class="btn" id="btnTourKey" href="./">I have a license key</a>
+      </div>
+    </div>
     <div class="container" id="mainContainer">
-      <aside class="sidebar">
+      <div class="drawer-backdrop no-print" id="settingsBackdrop" hidden></div>
+      <aside class="sidebar" id="settingsPanel" aria-label="Schedule settings">
+        <div class="drawer-head no-print">
+          <strong>Settings</strong>
+          <button type="button" class="btn btn-accent" id="btnCloseSettings">Done</button>
+        </div>
         <div class="card" id="calendarsCard">
           <h2 class="section-title">👧 My calendars</h2>
           <div class="item-list" id="calendarList"></div>
@@ -878,10 +900,13 @@
             rel="noopener noreferrer"
             >Buy a license</a
           >
+          <a class="btn" id="btnTryDemo" href="?demo">Try a free demo</a>
           <button type="button" class="btn" id="btnLicenseClose">Not now</button>
           <button type="button" class="btn btn-accent" id="btnUnlockLicense">Unlock</button>
         </div>
-        <p class="hint" style="margin-top:14px;margin-bottom:0;">Your key is in your Gumroad receipt email.</p>
+        <p class="hint" style="margin-top:14px;margin-bottom:0;">
+          Lost your key? Search your email for “Gumroad” or the product name: the key is in the receipt. You can also sign in at gumroad.com and open your Library.
+        </p>
       </div>
     </div>
     <div class="setup-overlay no-print" id="setupOverlay" role="dialog" aria-modal="true" aria-labelledby="setupTitle">

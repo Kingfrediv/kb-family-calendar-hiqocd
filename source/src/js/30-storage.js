@@ -126,9 +126,16 @@ let license = null;
 
 let licenseDialogOpen = false;
 
+// "?demo" opens a read-only tour with a made-up family; it never touches stored data
+const DEMO_QUERY = /[?&]demo(?:[=&#]|$)/.test(location.search);
+
 function loadInitialState() {
   const _0x28b4cc = defaultState();
   let _0x531602 = readBakedState();
+  if (DEMO_QUERY && !_0x531602 && !shareKind()) {
+    viewingShared = true;
+    return normalizeState(mergeStates(sampleState(), demoFamilyState()));
+  }
   let _0x2e104b = null;
   const _0x21bdeb = shareKind();
   if (_0x21bdeb === "s") {
@@ -494,6 +501,19 @@ if (isFirstRun && window.innerWidth <= 600) {
   }
 }
 
+// A calendar last used in an earlier year opens on the current year (not on a stale one).
+let rolledFromYear = 0;
+if (state.savedAt && !viewingShared) {
+  const savedYear = new Date(state.savedAt).getFullYear();
+  const nowDate = new Date();
+  const thisYear = nowDate.getFullYear();
+  if (savedYear < thisYear && state.year === savedYear && thisYear >= MIN_YEAR && thisYear <= MAX_YEAR) {
+    rolledFromYear = savedYear;
+    state.year = thisYear;
+    state.selectedMonth = nowDate.getMonth();
+  }
+}
+
 let notesEditing = false;
 
 lastSavedJson = JSON.stringify(state);
@@ -515,10 +535,16 @@ function save(_0x12f078) {
     lastUndoPushAt = _0x5209fa;
   }
   state.savedAt = Date.now();
+  let stored = true;
   if (!viewingShared && isLicensed()) {
     try {
       localStorage.setItem(currentStorageKey(), JSON.stringify(state));
-    } catch {}
+    } catch {
+      stored = false;
+    }
+    if (!(_0x12f078 && _0x12f078.nav && stored)) {
+      showSaveStatus(stored);
+    }
   }
   const nextJson = JSON.stringify(state);
   if (!viewingShared && isLicensed() && !(_0x12f078 && _0x12f078.nav)) {
@@ -527,6 +553,25 @@ function save(_0x12f078) {
   lastSavedJson = nextJson;
   noteCalendarName();
   updateUndoButton();
+}
+
+// "Saved ✓" for a moment after each change, and a lasting warning if the browser refused to store it
+let saveStatusTimer = 0;
+function showSaveStatus(ok) {
+  const el = document.getElementById("saveStatus");
+  if (!el) {
+    return;
+  }
+  clearTimeout(saveStatusTimer);
+  el.classList.toggle("bad", !ok);
+  if (ok) {
+    el.textContent = "Saved ✓ on this device";
+    saveStatusTimer = setTimeout(() => {
+      el.textContent = "";
+    }, 2500);
+  } else {
+    el.textContent = "⚠ Not saved: this browser would not store it. Use Share & export › Back up to a file.";
+  }
 }
 
 function updateUndoButton() {

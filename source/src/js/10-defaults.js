@@ -117,6 +117,30 @@ function sampleState() {
   });
 }
 
+// A made-up family for the free demo (?demo). Nothing here is real, and nothing in the demo is saved.
+function demoFamilyState() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const ymd = (m, d) => `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  return {
+    year: y,
+    selectedMonth: now.getMonth(),
+    childName: "Riley",
+    p1Name: "Alex",
+    p2Name: "Sam",
+    setupComplete: true,
+    schoolName: "Maple Elementary",
+    schoolNotes: "Early release Wednesdays.",
+    dayNotes: { [ymd(now.getMonth() + 1, Math.min(now.getDate() + 2, 28))]: "Dentist at 4. Alex brings the insurance card." },
+    activities: [
+      { id: "demo1", date: ymd(now.getMonth() + 1, Math.min(now.getDate() + 1, 28)), time: "16:30", title: "Soccer practice" },
+      { id: "demo2", date: ymd(now.getMonth() + 1, Math.min(now.getDate() + 3, 28)), time: "10:00", title: "Birthday party" }
+    ],
+    agreementNotes:
+      "This is a sample family so you can try the calendar. Tap any day to see who has it and why. Nothing here is saved, and your own calendar needs a license."
+  };
+}
+
 function mergeStates(_0x47eeff, _0x135a43) {
   const _0x2aa056 = Object.assign({}, _0x47eeff, _0x135a43);
   if (!_0x135a43 || !Object.prototype.hasOwnProperty.call(_0x135a43, "scheduleUnset")) {

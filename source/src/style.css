@@ -2046,3 +2046,89 @@ body.show-initials .dp-tile.p2 {
 @media print {
   .tonight-card { display: none !important; }
 }
+
+/* ---- phones and tablets: calendar first, settings in a drawer ---- */
+.drawer-head,
+.drawer-backdrop {
+  display: none;
+}
+@media (max-width: 980px) {
+  .container:not(.hide-sidebar) .sidebar {
+    position: fixed;
+    z-index: 70;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(440px, 100vw);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--bg);
+    padding: 0 12px 24px;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
+    -webkit-overflow-scrolling: touch;
+  }
+  .container:not(.hide-sidebar) .drawer-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin: 0 -12px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .container:not(.hide-sidebar) .drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 65;
+    background: rgba(0, 0, 0, 0.45);
+  }
+  .container:not(.hide-sidebar) .drawer-backdrop[hidden] {
+    display: none;
+  }
+  .container.hide-sidebar .drawer-backdrop {
+    display: none;
+  }
+}
+@media print {
+  .drawer-head,
+  .drawer-backdrop {
+    display: none !important;
+  }
+}
+
+.save-status {
+  min-height: 1.1em;
+  font-size: 0.74rem;
+  color: var(--header-sub);
+  margin-top: 2px;
+}
+.save-status.bad {
+  color: #1c1917;
+  background: #fde68a;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-weight: 700;
+  display: inline-block;
+}
+@media print {
+  .save-status {
+    display: none !important;
+  }
+}
+
+.date-words {
+  font-size: 0.74rem;
+  color: var(--muted);
+  margin-top: 3px;
+  min-height: 1em;
+}
+.hint-row {
+  font-size: 0.76rem;
+  color: var(--muted);
+  line-height: 1.4;
+  margin: 0 0 10px;
+}

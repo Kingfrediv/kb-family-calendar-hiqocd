@@ -404,6 +404,8 @@ function renderChrome() {
   document.getElementById("viewMonthBtn").classList.toggle("active", state.viewMode === "month");
   document.getElementById("monthPickerWrap").style.display = state.viewMode === "month" ? "block" : "none";
   document.getElementById("mainContainer").classList.toggle("hide-sidebar", !!state.sidebarHidden);
+  document.getElementById("settingsBackdrop").hidden = !!state.sidebarHidden;
+  refreshDateWords();
   document.getElementById("btnToggleSidebar").textContent = state.sidebarHidden
     ? "⚙️ Customize Schedule"
     : "✕ Hide Settings";
@@ -424,7 +426,7 @@ function renderChrome() {
   setInputValue("schoolStartInput", _0xb05700);
   setInputValue("springBreakInput", _0x4d5822);
   const _0x18cd19 = Object.keys(state.overrides).filter(_0xc127ce => _0xc127ce.startsWith(`${state.year}-`)).length;
-  document.getElementById("btnResetOverrides").textContent = `Reset Individually Clicked Days (${_0x18cd19})`;
+  document.getElementById("btnResetOverrides").textContent = `Clear changed days for this year (${_0x18cd19})`;
   const _0x1d04e7 =
     Object.keys(state.disabledByYear || {}).filter(_0xf45aba => _0xf45aba.startsWith(`${state.year}:`)).length +
     Object.keys(state.holidayYearOverrides || {}).filter(_0x58d706 => _0x58d706.startsWith(`${state.year}:`)).length;

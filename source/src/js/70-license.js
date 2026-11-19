@@ -1,5 +1,6 @@
 function isLicensed() {
-  return !!license && !!license.key;
+  // the free demo never behaves as a licensed copy, so it cannot be edited, saved or exported
+  return !DEMO_QUERY && !!license && !!license.key;
 }
 
 function isViewOnly() {
@@ -120,6 +121,10 @@ function applyLicenseState() {
 function requireLicense() {
   if (isLicensed()) {
     return true;
+  }
+  if (DEMO_QUERY) {
+    toast("This is a free demo, so it is look-only. Get your own calendar to change things.");
+    return false;
   }
   toast("Enter your license key to edit, save, or export your own calendar.");
   if (isViewOnly()) {

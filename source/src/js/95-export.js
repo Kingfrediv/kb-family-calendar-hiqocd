@@ -203,7 +203,8 @@ const BAKE_CLEAR_IDS = [
   "sidebarSchoolList",
   "rulesSummaryBox",
   "schoolMainDisplay",
-  "baseSplitBar"
+  "baseSplitBar",
+  "saveStatus"
 ];
 
 function downloadCopy() {

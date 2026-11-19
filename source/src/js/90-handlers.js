@@ -159,6 +159,32 @@ document.getElementById("btnToggleSidebar").onclick = () => {
   render();
 };
 
+// on a phone the settings are a drawer: "Done", a tap outside it, or Escape puts it away
+function closeSettingsDrawer() {
+  if (state.sidebarHidden) {
+    return false;
+  }
+  state.sidebarHidden = true;
+  save({
+    nav: true
+  });
+  render();
+  document.getElementById("btnToggleSidebar").focus({ preventScroll: true });
+  return true;
+}
+function settingsAreDrawer() {
+  return window.matchMedia("(max-width: 980px)").matches;
+}
+document.getElementById("btnCloseSettings").onclick = closeSettingsDrawer;
+document.getElementById("settingsBackdrop").onclick = closeSettingsDrawer;
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Escape" && settingsAreDrawer() && !document.querySelector(".setup-overlay.show")) {
+    if (closeSettingsDrawer()) {
+      ev.preventDefault();
+    }
+  }
+});
+
 document.getElementById("weekStartSunBtn").onclick = () => {
   kbSetWeekStart(false);
   save();
@@ -380,6 +406,7 @@ document.getElementById("btnResetOverrides").onclick = () => {
   });
   save();
   render();
+  toast("Cleared the changed days for this year.", { label: "Undo", run: undo });
 };
 
 document.getElementById("btnResetHolidays").onclick = () => {
@@ -395,6 +422,7 @@ document.getElementById("btnResetHolidays").onclick = () => {
   });
   save();
   render();
+  toast("Holiday tiles reset for this year.", { label: "Undo", run: undo });
 };
 
 document.getElementById("btnResetAll").onclick = () => {
@@ -403,6 +431,7 @@ document.getElementById("btnResetAll").onclick = () => {
   }
   const _0x55189c = currentStorageKey();
   const kbHome = kbHomeFileId();
+  const beforeReset = JSON.stringify(state);
   viewingShared = false;
   undoStack = [];
   state = normalizeState(defaultState());
@@ -429,7 +458,19 @@ document.getElementById("btnResetAll").onclick = () => {
   drawSchoolEventList();
   render();
   updateUndoButton();
-  toast("All settings reset to default template!");
+  toast("Everything was reset to the blank template.", {
+    label: "Undo",
+    run: () => {
+      state = normalizeState(Object.assign({}, defaultState(), JSON.parse(beforeReset)));
+      save({ fromUndo: true });
+      drawSummer();
+      drawCustomHolidayList();
+      drawSchoolEventList();
+      applyColors();
+      render();
+      toast("Brought it all back.");
+    }
+  });
 };
 
 document.getElementById("btnToggleNotesEdit").onclick = () => {

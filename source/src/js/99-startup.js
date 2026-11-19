@@ -34,7 +34,14 @@ applyLicenseState();
 
 recheckLicense();
 
-if (pendingShareKind === "c") {
+if (DEMO_QUERY && viewingShared && !pendingShareKind && !kbIsCopy()) {
+  document.getElementById("tourBanner").classList.add("show");
+  if (license && license.key) {
+    // someone who already owns it: no sales pitch, just the way back
+    document.getElementById("btnTourBuy").hidden = true;
+    document.getElementById("btnTourKey").textContent = "Back to my calendar";
+  }
+} else if (pendingShareKind === "c") {
   openCompressedShare();
 } else if (pendingShareKind === "p") {
   askSharePasscode();
