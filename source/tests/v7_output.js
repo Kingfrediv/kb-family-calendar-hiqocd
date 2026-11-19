@@ -44,7 +44,6 @@ const L = require('./lib'); const { check } = L;
 
   // ================= time zones: the definition must agree with the browser's own offsets
   const zones = ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'America/Phoenix', 'America/Anchorage', 'Pacific/Honolulu', 'America/Toronto', 'America/Halifax', 'America/St_Johns', 'America/Mexico_City', 'America/Sao_Paulo', 'America/Argentina/Buenos_Aires', 'Europe/London', 'Europe/Dublin', 'Europe/Paris', 'Europe/Moscow', 'Africa/Cairo', 'Africa/Johannesburg', 'Asia/Kolkata', 'Asia/Kathmandu', 'Asia/Tokyo', 'Asia/Dubai', 'Australia/Sydney', 'Australia/Lord_Howe', 'Australia/Adelaide', 'Pacific/Auckland', 'Pacific/Chatham', 'Pacific/Kiritimati', 'Asia/Tehran', 'America/Havana', 'UTC'];
-  const zoneOffset = (zone, ms) => { const p = new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName: 'longOffset' }).formatToParts(ms).find(x => x.type === 'timeZoneName').value; if (p === 'GMT') return 0; const m = /GMT([+\-−])(\d{1,2})(?::(\d{2}))?/.exec(p); return (m[1] === '+' ? 1 : -1) * (+m[2] * 60 + +(m[3] || 0)); };
   const parseLocal = s => Date.UTC(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8), +s.slice(9, 11) || 0, +s.slice(11, 13) || 0);
   const parseOff = s => (s[0] === '-' ? -1 : 1) * (+s.slice(1, 3) * 60 + +s.slice(3, 5));
   const tzBad = [], tzNote = [];
@@ -55,11 +54,15 @@ const L = require('./lib'); const { check } = L;
     const obs = [...vt[0].matchAll(/BEGIN:(STANDARD|DAYLIGHT)\r?\nDTSTART:(\d{8}T\d{6})\r?\nTZOFFSETFROM:([+-]\d{4})\r?\nTZOFFSETTO:([+-]\d{4})/g)].map(m => ({ at: parseLocal(m[2]), from: parseOff(m[3]), to: parseOff(m[4]) })).sort((a, b) => a.at - b.at);
     const offsetAt = wall => { let off = obs[0].to; for (const o of obs.slice(1)) if (wall >= o.at) off = o.to; return off; };
     let bad = 0, checked = 0;
+    // the expected offsets come from the browser that built the file (Node's own time-zone data can be a release older or newer)
+    const samples = [];
     for (let d = Date.UTC(2026, 0, 1, 12); d < Date.UTC(2029, 0, 1); d += 5 * 86400000) {
-      const wall = d; const off = offsetAt(wall); const utc = wall - off * 60000; const real = zoneOffset(zone, utc); checked++;
+      const wall = d; const off = offsetAt(wall);
       // skip wall times within a day of a change, where the same wall time can mean two moments
-      if (obs.some(o => Math.abs(o.at - wall) < 86400000)) continue; if (real !== off) bad++;
+      if (obs.some(o => Math.abs(o.at - wall) < 86400000)) continue; samples.push([wall - off * 60000, off]);
     }
+    const reals = await page.evaluate(([zone, list]) => list.map(ms => { const p = new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName: 'longOffset' }).formatToParts(ms).find(x => x.type === 'timeZoneName').value; if (p === 'GMT') return 0; const m = /GMT([+\-−])(\d{1,2})(?::(\d{2}))?/.exec(p); return (m[1] === '+' ? 1 : -1) * (+m[2] * 60 + +(m[3] || 0)); }), [zone, samples.map(x => x[0])]);
+    samples.forEach(([, off], i) => { checked++; if (reals[i] !== off) bad++; });
     // and the events in the file use that zone
     const dt = [...text.matchAll(/DTSTART;TZID=([^:]+):/g)].map(m => m[1]); if (dt.length && !dt.every(z => z === zone)) bad++;
     if (bad) tzBad.push(`${zone}: ${bad}/${checked} wrong`); if (obs.length === 1) tzNote.push(zone);

@@ -67,7 +67,7 @@ function openLicenseDialog(_0x3248e5) {
   } else if (license && license.key) {
     _0x37345b.value = license.key;
   }
-  setTimeout(() => _0x37345b.focus(), 50);
+  kbFocusLater("licenseOverlay", _0x37345b, 50);
 }
 
 let kbOpener = null;
@@ -377,6 +377,6 @@ function startOwnCalendarFromDemo() {
   renderEverything();
   updateUndoButton();
   document.getElementById("setupOverlay").classList.add("show");
-  setTimeout(() => document.getElementById("setupChild").focus(), 50);
+  kbFocusLater("setupOverlay", () => document.getElementById("setupChild"), 50);
   toast("Sample data cleared. Start your own calendar.");
 }

@@ -63,10 +63,11 @@ function openDaySheet(ds) {
   document.getElementById("daySheet").classList.add("show");
   drawDaySheet();
   const first = document.querySelector("#daySheet button:not([hidden]):not([disabled]), #daySheet textarea");
-  setTimeout(() => {
-    const pressed = document.querySelector("#daySheet .day-owner[aria-pressed='true']");
-    (pressed || first || document.getElementById("btnDayDone")).focus();
-  }, 30);
+  kbFocusLater(
+    "daySheet",
+    () => document.querySelector("#daySheet .day-owner[aria-pressed='true']") || first || document.getElementById("btnDayDone"),
+    30
+  );
 }
 
 function closeDaySheet(returnFocus) {

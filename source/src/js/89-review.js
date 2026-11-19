@@ -179,7 +179,7 @@ function openReview() {
   }
   kbRemember();
   document.getElementById("reviewOverlay").classList.add("show");
-  setTimeout(() => (apply.hidden ? document.getElementById("btnReviewCancel") : apply).focus(), 30);
+  kbFocusLater("reviewOverlay", () => (apply.hidden ? document.getElementById("btnReviewCancel") : apply), 30);
 }
 
 function applyReview() {

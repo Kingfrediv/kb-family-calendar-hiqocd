@@ -267,6 +267,20 @@ function kbReturnFocus() {
   }
 }
 
+// Move focus into a dialog a moment after it opens, unless something inside it already has focus (someone who
+// starts typing at once, or a test, must not have the cursor pulled out from under them).
+function kbFocusLater(dialogId, target, delay) {
+  setTimeout(() => {
+    const dialog = document.getElementById(dialogId);
+    const el = typeof target === "function" ? target() : target;
+    const active = document.activeElement;
+    if (!el || (dialog && active && active !== dialog && dialog.contains(active) && active.matches("input,textarea,select,button,a[href]"))) {
+      return;
+    }
+    el.focus();
+  }, delay);
+}
+
 function kbCloseDialog(el) {
   if (!el) {
     return false;

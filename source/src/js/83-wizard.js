@@ -82,7 +82,7 @@ function showWizardStep(n) {
     document.getElementById("setupSummer").options[1].textContent = `${names.p2} has summer, except the weeks ${names.p1} picks`;
   }
   const firstField = document.querySelector(`#wizStep${n} input, #wizStep${n} select, #wizStep${n} .wiz-preset`);
-  setTimeout(() => firstField && firstField.focus(), 30);
+  kbFocusLater("setupOverlay", firstField, 30);
 }
 
 function openSetupDialog() {

@@ -176,7 +176,7 @@ function openHistory() {
   kbRemember();
   drawHistory();
   document.getElementById("historyOverlay").classList.add("show");
-  setTimeout(() => document.getElementById("btnHistoryClose").focus(), 30);
+  kbFocusLater("historyOverlay", () => document.getElementById("btnHistoryClose"), 30);
 }
 
 document.getElementById("btnHistory").onclick = openHistory;

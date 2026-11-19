@@ -51,7 +51,7 @@ function askSharePasscode() {
   _0xea11d2.classList.remove("show");
   document.getElementById("unlockPasscode").value = "";
   document.getElementById("passcodeOverlay").classList.add("show");
-  setTimeout(() => document.getElementById("unlockPasscode").focus(), 50);
+  kbFocusLater("passcodeOverlay", () => document.getElementById("unlockPasscode"), 50);
 }
 
 async function unlockSharedWithPasscode() {
@@ -193,7 +193,7 @@ function openShareDialog(options) {
     _0x2edb47.classList.remove("show");
   }
   document.getElementById("shareOverlay").classList.add("show");
-  setTimeout(() => document.getElementById(options && options.message ? "shareMessage" : "sharePasscode").focus(), 50);
+  kbFocusLater("shareOverlay", () => document.getElementById(options && options.message ? "shareMessage" : "sharePasscode"), 50);
 }
 
 async function createShareLink() {

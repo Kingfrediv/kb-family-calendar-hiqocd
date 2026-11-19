@@ -247,7 +247,7 @@ function onExportIcs() {
   fillZoneSelect();
   kbRemember();
   document.getElementById("icsOverlay").classList.add("show");
-  setTimeout(() => document.getElementById("icsYears").focus(), 30);
+  kbFocusLater("icsOverlay", () => document.getElementById("icsYears"), 30);
 }
 
 function downloadIcs() {

@@ -20,6 +20,8 @@ jobs:
           cache-dependency-path: source/package-lock.json
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - name: PDF text tool (the printed-report tests read the PDF)
+        run: sudo apt-get install -y poppler-utils
       - name: The published page was built from the current source
         run: npm run check:release
       - name: Build and run every test
