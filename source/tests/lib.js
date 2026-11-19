@@ -145,3 +145,11 @@ function pdfPageGrey(pdfPath, page, dpi, prefix) {
   return { mean: sum / px.length, share: (lo, hi) => { let n = 0; for (const v of px) if (v > lo && v < hi) n++; return n / px.length; } };
 }
 Object.assign(module.exports, { pdfPageGrey });
+
+// Open the share dialog and wait until it has finished moving focus into itself. The original release pulls focus to the
+// passcode box 50 ms after opening, which on a slow machine lands in the middle of typing into the next box.
+async function openShare(page) {
+  await act(page, '#btnCopyLink');
+  await page.waitForFunction(() => document.activeElement && /^share(Passcode|Message)$/.test(document.activeElement.id), null, { timeout: 5000 }).catch(() => {});
+}
+Object.assign(module.exports, { openShare });
