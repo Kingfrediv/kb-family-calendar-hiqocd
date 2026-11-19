@@ -1,0 +1,28 @@
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: source/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: The published page was built from the current source
+        run: npm run check:release
+      - name: Build and run every test
+        run: npm test
+      - name: The committed, published page passes the same tests
+        run: npm run test:release

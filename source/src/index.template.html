@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="kb-build" content="{{BUILD}}" />
+    <meta name="theme-color" content="#18181b" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Parenting" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%90%9D%3C/text%3E%3C/svg%3E"
+    />
+    <title>Kingdom Building — Shared Parenting Calendar</title>
+    <style>
+      {{STYLE}}
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="header-title">
+        <div class="brand-name">Kingdom Building</div>
+        <h1 id="headerTitle">🐝 Shared Parenting Schedule</h1>
+        <div class="subtitle" id="headerSubtitle">2026 Parenting Calendar • Overnights, Holidays, School Breaks &amp; Birthdays</div>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn btn-dark" id="btnToggleSidebar" aria-label="Hide settings">✕ Hide Settings</button>
+        <button type="button" class="btn btn-dark" id="btnUndo" aria-label="Undo last change" disabled="disabled">↩ Undo</button>
+        <span class="year-nav">
+          <button type="button" class="btn btn-dark" id="btnPrevYear" aria-label="Previous year">&larr; 2025</button>
+          <span id="headerYearBadge" aria-live="polite">2026</span>
+          <button type="button" class="btn btn-dark" id="btnNextYear" aria-label="Next year">2027 &rarr;</button>
+        </span>
+        <button type="button" class="btn btn-dark" id="btnToday">Today</button>
+        <div class="menu-wrap">
+          <button
+            type="button"
+            class="btn btn-accent"
+            id="btnMenuShare"
+            aria-haspopup="menu"
+            aria-expanded="false"
+            aria-controls="shareMenu"
+          >
+            Share &amp; export ▾
+          </button>
+          <div class="menu-backdrop" id="menuBackdrop" hidden></div>
+          <div class="menu-panel no-print" id="shareMenu" role="menu" aria-label="Share and export" hidden>
+            <div class="menu-label" role="presentation">Share</div>
+            <button type="button" class="menu-item" role="menuitem" id="btnCopyLink" aria-describedby="privacyNote">🔗 Copy share link…</button>
+            <button type="button" class="menu-item" role="menuitem" id="btnSaveBakedHtml">💾 Download a copy to send</button>
+            <div class="menu-label" role="presentation">Export</div>
+            <button type="button" class="menu-item" role="menuitem" id="btnExportIcs">📅 Add to phone calendar</button>
+            <button type="button" class="menu-item" role="menuitem" id="btnPrint">🖨️ Print / save as PDF</button>
+            <button type="button" class="menu-item" role="menuitem" id="btnExportCsv">📊 Spreadsheet (CSV)</button>
+            <div class="menu-label" role="presentation">Back up</div>
+            <button type="button" class="menu-item" role="menuitem" id="btnBackup">⬇️ Back up to a file</button>
+            <button type="button" class="menu-item" role="menuitem" id="btnRestore">⬆️ Restore from a backup</button>
+            <input type="file" id="restoreFile" accept=".json,application/json" hidden />
+            <div class="menu-note" id="backupNote">Last backup: never</div>
+            <div class="menu-label" role="presentation" id="menuAppLabel">App</div>
+            <button type="button" class="menu-item" role="menuitem" id="btnInstall" hidden>📲 Install app</button>
+            <div class="menu-note" id="privacyNote">
+              Share links keep your schedule inside the link itself, so nothing is uploaded. Add a passcode and send it separately.
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <div class="shared-banner no-print" id="sharedBanner" role="status">
+      <strong id="sharedBannerTitle">You are viewing a shared link.</strong>
+      <span id="sharedBannerText">It is not saved in this browser and will not change the calendar already stored on this device.</span>
+      <div class="banner-actions licensed-share-actions">
+        <button type="button" class="btn btn-accent" id="btnSaveShared">Save to this browser</button>
+        <button type="button" class="btn" id="btnDownloadShared">Download Copy</button>
+        <button type="button" class="btn" id="btnDismissShared">Dismiss</button>
+      </div>
+      <div class="banner-actions view-only-actions" id="viewOnlyActions">
+        <span>This is a view-only shared schedule. Editing, saving, and exports need your own license.</span>
+        <a
+          class="btn btn-accent"
+          id="btnGetOwnCalendar"
+          data-license-buy
+          href="https://maysiv.gumroad.com/l/cihrf"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Get your own calendar</a
+        >
+        <button type="button" class="btn" id="btnEnterLicense">I have a license key</button>
+      </div>
+    </div>
+    <div class="demo-banner no-print" id="demoBanner" role="status">
+      <strong>Demo — sample data.</strong> This is a fictional sample family so you can see how the calendar looks. It is not a real
+      schedule.
+      <div class="banner-actions"><button type="button" class="btn btn-accent" id="btnStartOwnCalendar">Start my own calendar</button></div>
+    </div>
+    <div class="container" id="mainContainer">
+      <aside class="sidebar">
+        <div class="card">
+          <h2 class="section-title">📅 Base Custody Days (Tap to Choose)</h2>
+          <div class="control-group">
+            <label>Repeat Pattern</label>
+            <div class="toggle-row">
+              <button class="toggle-btn active" id="modeWeeklyBtn">Weekly</button>
+              <button class="toggle-btn" id="modeBiweeklyBtn">Every 2 Weeks</button>
+              <button class="toggle-btn" id="modeMonthlyBtn">Monthly</button>
+            </div>
+          </div>
+          <div class="control-group" id="biweeklyAnchorWrap" style="display:none;">
+            <label for="biweeklyAnchorInput">Week 1 Starts (Any Date in Week 1)</label><input type="date" id="biweeklyAnchorInput" />
+          </div>
+          <div class="control-group" id="presetWrap">
+            <label>Common schedules</label>
+            <div class="preset-row">
+              <button type="button" class="btn btn-sm preset-btn" data-preset="7-7">Alternating weeks (7-7)</button>
+              <button type="button" class="btn btn-sm preset-btn" data-preset="2-2-5-5">2-2-5-5</button>
+              <button type="button" class="btn btn-sm preset-btn" data-preset="2-2-3">2-2-3</button>
+              <button type="button" class="btn btn-sm preset-btn" data-preset="3-4-4-3">3-4-4-3</button>
+              <button type="button" class="btn btn-sm preset-btn" data-preset="5-2-2-5">5-2-2-5</button>
+              <button type="button" class="btn btn-sm preset-btn" data-preset="eow">
+                Every other weekend (Fri–Sun to <span class="lbl-p2">Parent 2</span>)
+              </button>
+              <button type="button" class="btn btn-sm preset-btn" data-preset="eow-mid">Every other weekend + midweek overnight</button>
+            </div>
+            <div class="hint" style="margin-top:6px;margin-bottom:0;">
+              One tap fills the pattern below. Two-week schedules use Every 2 Weeks and keep your week-start and Week 1 date. Flip Parents
+              and Undo still work.
+            </div>
+          </div>
+          <div class="hint" style="margin-top:0;margin-bottom:6px;">
+            Tap days to pick each overnight (<b class="lbl-p1">Parent 1</b> / <b class="lbl-p2">Parent 2</b>). Morning→night handoffs blend
+            automatically.
+          </div>
+          <div id="baseDayPickerContainer"></div>
+          <div class="base-split-bar" id="baseSplitBar"></div>
+          <div class="grid-2" style="margin-top:8px;">
+            <button class="btn btn-sm" id="btnBaseClear">Set All <span class="lbl-p2">Parent 2</span></button>
+            <button class="btn btn-sm" id="btnBaseFlip">Flip Parents</button>
+          </div>
+          <div class="control-group" style="margin-top:10px;">
+            <label>Half-Day Pickup / Return Shading</label>
+            <div class="toggle-row">
+              <button class="toggle-btn active" id="splitDaysOn">Soft Morning→Night Blend</button>
+              <button class="toggle-btn" id="splitDaysOff">Solid Overnight Color</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="section-title">Family Names &amp; Calendar View</h2>
+          <div class="control-group">
+            <label for="childNameInput">Child's Name</label
+            ><input type="text" id="childNameInput" placeholder="Child's Name" maxlength="25" />
+          </div>
+          <div class="control-group">
+            <div class="grid-2">
+              <div>
+                <label for="p1NameInput">Parent 1 Name</label
+                ><input type="text" id="p1NameInput" placeholder="e.g. Parent 1, Dad, Mama..." maxlength="20" />
+              </div>
+              <div>
+                <label for="p2NameInput">Parent 2 Name</label
+                ><input type="text" id="p2NameInput" placeholder="e.g. Parent 2, Mom, Baba..." maxlength="20" />
+              </div>
+            </div>
+          </div>
+          <div class="control-group">
+            <label for="yearSelect">Calendar Year</label
+            ><select id="yearSelect"></select>
+          </div>
+          <div class="control-group">
+            <label>Week Starts On</label>
+            <div class="toggle-row">
+              <button class="toggle-btn active" id="weekStartSunBtn">Sunday (Su–Sa)</button>
+              <button class="toggle-btn" id="weekStartMonBtn">Monday (Mo–Su)</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label>View Mode</label>
+            <div class="toggle-row">
+              <button class="toggle-btn active" id="viewYearBtn">Full Year</button>
+              <button class="toggle-btn" id="viewMonthBtn">Single Month</button>
+            </div>
+          </div>
+          <div class="control-group" id="monthPickerWrap" style="display:none;">
+            <label for="monthSelect">Select Month</label
+            ><select id="monthSelect"></select>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="section-title">🎂 Family Birthdays</h2>
+          <div class="control-group">
+            <label id="lblBdayChild"><span class="lbl-child">Child</span>'s Birthday (All Together)</label>
+            <div class="bday-row">
+              <select id="bdayChildMonth" aria-labelledby="lblBdayChild" aria-label="Child birthday month"></select
+              ><select id="bdayChildDay" aria-label="Child birthday day"></select>
+            </div>
+          </div>
+          <div class="control-group">
+            <label id="lblBdayP1"><span class="lbl-p1">Parent 1</span>'s Birthday</label>
+            <div class="bday-row">
+              <select id="bdayP1Month" aria-labelledby="lblBdayP1" aria-label="Parent 1 birthday month"></select
+              ><select id="bdayP1Day" aria-label="Parent 1 birthday day"></select>
+            </div>
+          </div>
+          <div class="control-group">
+            <label id="lblBdayP2"><span class="lbl-p2">Parent 2</span>'s Birthday</label>
+            <div class="bday-row">
+              <select id="bdayP2Month" aria-labelledby="lblBdayP2" aria-label="Parent 2 birthday month"></select
+              ><select id="bdayP2Day" aria-label="Parent 2 birthday day"></select>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="section-title">🎨 Colors &amp; Keyboard Emojis</h2>
+          <div class="control-group">
+            <label>Pick Colors</label>
+            <div class="grid-3">
+              <div class="color-box">
+                <input type="color" id="p1ColorInput" aria-label="Parent 1 color" /><span class="lbl-p1">Parent 1</span>
+              </div>
+              <div class="color-box">
+                <input type="color" id="p2ColorInput" aria-label="Parent 2 color" /><span class="lbl-p2">Parent 2</span>
+              </div>
+              <div class="color-box"><input type="color" id="headerColorInput" aria-label="Top bar color" /><span>Top Bar</span></div>
+            </div>
+          </div>
+          <div class="control-group">
+            <label>Type Any Emoji From Your Keyboard</label>
+            <div class="grid-3">
+              <div class="emoji-box">
+                <input type="text" id="titleEmojiInput" class="emoji-input" maxlength="6" placeholder="🐝" aria-label="Title emoji" /><span
+                  >Title</span
+                >
+              </div>
+              <div class="emoji-box">
+                <input
+                  type="text"
+                  id="summerEmojiInput"
+                  class="emoji-input"
+                  maxlength="6"
+                  placeholder="🌻"
+                  aria-label="Summer emoji"
+                /><span>Summer</span>
+              </div>
+              <div class="emoji-box">
+                <input
+                  type="text"
+                  id="schoolEmojiInput"
+                  class="emoji-input"
+                  maxlength="6"
+                  placeholder="📚"
+                  aria-label="School emoji"
+                /><span>School</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="section-title">☀️ Summer Schedule Layer</h2>
+          <div class="control-group">
+            <label>Summer Override (Jun 1 – Aug 14, including month-end days)</label>
+            <div class="toggle-row">
+              <button class="toggle-btn active" id="summerOnBtn">Use Summer Weeks</button
+              ><button class="toggle-btn" id="summerOffBtn">Keep Base Schedule</button>
+            </div>
+          </div>
+          <div id="summerControlsWrap">
+            <div class="control-group">
+              <label>Non-Selected Summer Days Go To</label>
+              <div class="toggle-row">
+                <button class="toggle-btn active" id="summerRestP2Btn"><span class="lbl-p2">Parent 2</span></button
+                ><button class="toggle-btn" id="summerRestBaseBtn">Follow Base Schedule</button>
+              </div>
+            </div>
+            <div class="control-group">
+              <label>June (<span class="lbl-p1">Parent 1</span>) <span class="week-status" id="juneStatus"></span></label>
+              <div class="week-grid" id="juneWeeks"></div>
+            </div>
+            <div class="control-group">
+              <label>July (<span class="lbl-p1">Parent 1</span>) <span class="week-status" id="julyStatus"></span></label>
+              <div class="week-grid" id="julyWeeks"></div>
+            </div>
+            <div class="control-group">
+              <label>August 1–14 (<span class="lbl-p1">Parent 1</span>) <span class="week-status" id="augStatus"></span></label>
+              <div class="week-grid" id="augWeeks"></div>
+            </div>
+            <div class="control-group" style="margin-top:8px;">
+              <label for="summerDeadlineInput">Summer Selection Deadline</label><input type="text" id="summerDeadlineInput" />
+            </div>
+            <div class="control-group">
+              <label for="summerFirstPickSelect">First-Pick Rotation</label>
+              <select id="summerFirstPickSelect">
+                <option value="evenP1">Alternates (Even: Parent 1 / Odd: Parent 2)</option>
+                <option value="evenP2">Alternates (Even: Parent 2 / Odd: Parent 1)</option>
+                <option value="mutual">Mutual Agreement by Deadline</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="section-title">Holidays &amp; Traditions</h2>
+          <div class="control-group">
+            <label>Alternating Year Rotation</label>
+            <div class="toggle-row">
+              <button class="toggle-btn active" id="rotStandardBtn">Even=<span class="lbl-p1">Parent 1</span></button
+              ><button class="toggle-btn" id="rotFlippedBtn">Even=<span class="lbl-p2">Parent 2</span></button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label>July 4th vs. Summer Weeks</label>
+            <div class="toggle-row">
+              <button class="toggle-btn active" id="holOverSummerOn">Holiday Wins</button
+              ><button class="toggle-btn" id="holOverSummerOff">Summer Keeps Jul 4</button>
+            </div>
+          </div>
+          <div class="grid-2" style="margin-bottom:8px;">
+            <div class="control-group" style="margin:0;">
+              <label for="mothersDayOwnerSelect">Mother's Day assignment</label>
+              <select id="mothersDayOwnerSelect">
+                <option value="skip">Not assigned (I'll set it)</option>
+                <option value="p1">Parent 1</option>
+                <option value="p2">Parent 2</option>
+                <option value="both">Together</option>
+              </select>
+            </div>
+            <div class="control-group" style="margin:0;">
+              <label for="fathersDayOwnerSelect">Father's Day assignment</label>
+              <select id="fathersDayOwnerSelect">
+                <option value="skip">Not assigned (I'll set it)</option>
+                <option value="p1">Parent 1</option>
+                <option value="p2">Parent 2</option>
+                <option value="both">Together</option>
+              </select>
+            </div>
+          </div>
+          <div class="hint">
+            Tap any tile to cycle that year: Parent 1 → Parent 2 → Together → Skipped (this year only). Re-enabling a skipped holiday
+            restores its usual rule.
+          </div>
+          <div class="holiday-tile-grid" id="holidayTiles"></div>
+          <button class="btn" id="btnResetHolidays" style="width:100%;margin-top:8px;">Reset Holiday Tiles (0)</button>
+          <div class="control-group" style="border-top:1px solid var(--border);padding-top:10px;margin-top:10px;">
+            <label>Add Custom Holiday / Cultural Day</label>
+            <div style="display:grid;grid-template-columns:1fr 54px;gap:6px;margin-bottom:6px;">
+              <input
+                type="text"
+                id="customHolName"
+                placeholder="e.g. Eid, Hanukkah, Diwali, Pride"
+                maxlength="28"
+                aria-label="Custom holiday name"
+              />
+              <input type="text" id="customHolEmoji" class="emoji-input" placeholder="✨" maxlength="6" aria-label="Custom holiday emoji" />
+            </div>
+            <div class="bday-row" style="margin-bottom:6px;">
+              <select id="customHolMonth" aria-label="Custom holiday month"></select
+              ><select id="customHolDay" aria-label="Custom holiday day"></select>
+            </div>
+            <div class="grid-2">
+              <select id="customHolRule" aria-label="Custom holiday assignment rule">
+                <option value="altA">Alternating (Group A)</option>
+                <option value="altB">Alternating (Group B)</option>
+                <option value="both">Together (50/50)</option>
+                <option value="p1">Always Parent 1</option>
+                <option value="p2">Always Parent 2</option>
+              </select>
+              <button class="btn btn-accent" id="btnAddCustomHol">+ Add Holiday</button>
+            </div>
+            <div class="item-list" id="customHolList"></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="section-title">School Calendar &amp; Dates</h2>
+          <div class="control-group">
+            <label for="schoolNameInput">School Name / District</label
+            ><input type="text" id="schoolNameInput" placeholder="e.g. Oak Grove Elementary" />
+          </div>
+          <div class="control-group">
+            <label for="schoolUrlInput">School Calendar Web Link (Optional)</label
+            ><input type="url" id="schoolUrlInput" placeholder="https://..." />
+          </div>
+          <div class="control-group">
+            <label for="schoolEndInput">Last Day of School (Spring)</label><input type="date" id="schoolEndInput" />
+          </div>
+          <div class="control-group">
+            <label for="schoolStartInput">First Day of School (Fall)</label><input type="date" id="schoolStartInput" />
+          </div>
+          <div class="control-group">
+            <label for="springBreakInput">Spring Break Starts (Monday, 7 days)</label><input type="date" id="springBreakInput" />
+          </div>
+          <div class="control-group" style="border-top:1px solid var(--border);padding-top:10px;margin-top:10px;">
+            <label>Add School Calendar Day / Break</label>
+            <div class="grid-2" style="margin-bottom:6px;">
+              <input type="date" id="addSchoolStart" aria-label="School event start date" /><input
+                type="date"
+                id="addSchoolEnd"
+                aria-label="School event end date"
+              />
+            </div>
+            <input
+              type="text"
+              id="addSchoolLabel"
+              placeholder="e.g. Teacher Workday / Half-Day"
+              style="margin-bottom:6px;"
+              aria-label="School event label"
+            />
+            <div class="grid-2">
+              <select id="addSchoolKind" aria-label="School event type">
+                <option value="noschool">No School (Normal Week)</option>
+                <option value="halfday">School Half-Day</option>
+                <option value="p1">No School (With Parent 1)</option>
+                <option value="p2">No School (With Parent 2)</option>
+              </select>
+              <button class="btn btn-accent" id="btnAddSchoolEvent">+ Add Date</button>
+            </div>
+            <div class="item-list" id="sidebarSchoolList"></div>
+          </div>
+          <div class="control-group" style="margin-top:10px;">
+            <label for="schoolNotesInput">School Calendar Notes</label
+            ><textarea id="schoolNotesInput" placeholder="Bell times, early release days, bus info..." style="min-height:64px;"></textarea>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="section-title">Exchange Times &amp; Reset</h2>
+          <div class="control-group">
+            <label for="timeToP1Input">Pickup Time (Transition to <span class="lbl-p1">Parent 1</span>)</label
+            ><input type="text" id="timeToP1Input" placeholder="e.g. After school (or 9:00 AM on breaks)" />
+          </div>
+          <div class="control-group">
+            <label for="timeToP2Input">Return Time (Transition to <span class="lbl-p2">Parent 2</span>)</label
+            ><input type="text" id="timeToP2Input" placeholder="e.g. 6:00 PM" />
+          </div>
+          <div class="control-group">
+            <label for="timeHolidayInput">Summer &amp; Holiday Exchange Time</label
+            ><input type="text" id="timeHolidayInput" placeholder="e.g. 6:00 PM (or 9:00 AM day-of)" />
+          </div>
+          <div class="control-group">
+            <label for="exchangeLocationInput">Exchange Location</label
+            ><input type="text" id="exchangeLocationInput" placeholder="e.g. School / receiving parent's home" />
+          </div>
+          <button class="btn" id="btnResetOverrides" style="width:100%;margin-top:6px;">Reset Individually Clicked Days (0)</button>
+          <button class="btn btn-danger" id="btnResetAll" style="width:100%;margin-top:8px;">
+            ⚠️ Reset All Settings to Blank Template
+          </button>
+        </div>
+      </aside>
+      <main class="main-col">
+        <div class="card">
+          <h2 class="section-title" id="summaryTitle">🐝 Schedule Agreement Summary</h2>
+          <div class="rules-summary" id="rulesSummaryBox"></div>
+        </div>
+        <div class="card">
+          <div class="stats-grid">
+            <div class="stat-box p1">
+              <div class="stat-label"><span class="lbl-p1">Parent 1</span> (<span class="lbl-yr">2026</span>)</div>
+              <div class="stat-value" id="statP1Days">0</div>
+              <div class="stat-sub" id="statP1Pct">0% of overnights</div>
+            </div>
+            <div class="stat-box p2">
+              <div class="stat-label"><span class="lbl-p2">Parent 2</span> (<span class="lbl-yr">2026</span>)</div>
+              <div class="stat-value" id="statP2Days">0</div>
+              <div class="stat-sub" id="statP2Pct">0% of overnights</div>
+            </div>
+            <div class="stat-box both">
+              <div class="stat-label">Together<span class="lbl-child-bday"></span></div>
+              <div class="stat-value" id="statBothDays">0</div>
+              <div class="stat-sub" id="statBothSub">No together days this year</div>
+            </div>
+            <div class="stat-box fair">
+              <div class="stat-label">2-Year Rotation Average</div>
+              <div class="stat-value" id="statTwoYearAvg">50% / 50%</div>
+              <div class="stat-sub" id="statTwoYearSub">Even + Odd year balance</div>
+            </div>
+          </div>
+          <div class="progress-bar">
+            <div class="bar-p1" id="barP1" style="width:50%"></div>
+            <div class="bar-both" id="barBoth" style="width:1%"></div>
+            <div class="bar-p2" id="barP2" style="width:49%"></div>
+          </div>
+        </div>
+        <div class="card toolbar">
+          <div class="legend">
+            <div class="legend-item">
+              <span class="swatch" style="background:var(--p1-bg);border-color:var(--p1-border)"></span>
+              <span class="lbl-p1">Parent 1</span> Full Day
+            </div>
+            <div class="legend-item">
+              <span class="swatch" style="background:var(--p2-bg);border-color:var(--p2-border)"></span>
+              <span class="lbl-p2">Parent 2</span> Full Day
+            </div>
+            <div class="legend-item">
+              <span class="swatch swatch-p2-to-p1"></span> Pickup (<span class="lbl-p2">Parent 2</span>→<span class="lbl-p1">Parent 1</span
+              >)
+            </div>
+            <div class="legend-item">
+              <span class="swatch swatch-p1-to-p2"></span> Return (<span class="lbl-p1">Parent 1</span>→<span class="lbl-p2">Parent 2</span
+              >)
+            </div>
+            <div class="legend-item"><span class="swatch swatch-both"></span> Together</div>
+            <div class="legend-item">
+              <span class="swatch" style="background:#fff;border:1.5px solid var(--ink)"></span> Holiday / B-Day
+            </div>
+            <div class="legend-item"><span id="legendSchoolEmoji">📚</span> School</div>
+            <div class="legend-item"><span id="legendSummerEmoji">🌻</span> Summer</div>
+          </div>
+          <div class="hint no-print" style="margin:0;" id="clickCycleHint">
+            Click a day to cycle: Parent 1 → Parent 2 → Together → back to the regular schedule. Keyboard: Enter or Space.
+          </div>
+        </div>
+        <div class="months-grid" id="calendarContainer"></div>
+        <div class="card">
+          <h2 class="section-title"><span id="schoolCardEmoji">📚</span> School Calendar &amp; Special School Days</h2>
+          <div class="school-main-box" id="schoolMainDisplay"></div>
+        </div>
+        <div class="card">
+          <h2 class="section-title" id="holidayTableTitle">Holidays, Birthdays &amp; School Breaks</h2>
+          <div class="table-wrap">
+            <table class="holiday-table">
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Dates</th>
+                  <th class="hide-mobile-col">Rule</th>
+                  <th>Assigned</th>
+                </tr>
+              </thead>
+              <tbody id="holidayTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <h2 class="section-title" style="margin:0;">📝 Agreement Notes &amp; Ground Rules</h2>
+            <button type="button" class="btn btn-sm no-print" id="btnToggleNotesEdit">Edit Notes</button>
+          </div>
+          <div class="notes-readonly" id="notesReadonly"></div>
+          <div id="notesEditorWrap" style="display:none;">
+            <label class="visually-hidden" for="notesTextarea">Agreement notes</label><textarea id="notesTextarea"></textarea>
+            <div class="hint">Changes save automatically and are included in saved files, links, and PDF printouts.</div>
+          </div>
+        </div>
+        <p class="disclaimer" id="disclaimer">
+          This calendar is a planning aid only. It is not legal advice and is not a court order. Confirm any schedule with your co-parent
+          and, if needed, a qualified attorney before relying on it.
+        </p>
+      </main>
+    </div>
+    <footer class="site-footer" id="siteFooter">
+      © <span class="lbl-cyear">2026</span> Kingdom Building. For personal use only. Not legal advice.
+    </footer>
+    <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastText"></span><button type="button" id="toastAction" hidden></button></div>
+    <p class="print-disclaimer">
+      © <span class="lbl-cyear">2026</span> Kingdom Building. This calendar is a planning aid only. It is not legal advice and is not a
+      court order. For personal use only.
+    </p>
+    <div class="share-loading no-print" id="shareLoading">Opening shared calendar…</div>
+    <div class="setup-overlay no-print" id="shareOverlay" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
+      <div class="setup-card">
+        <h2 id="shareTitle">Copy share link</h2>
+        <p class="hint">
+          The schedule is stored in the link's URL fragment (it is not sent to a server). Optional: add a passcode and share it separately
+          so the link alone reveals nothing.
+        </p>
+        <div class="control-group">
+          <label for="sharePasscode">Passcode (optional, 6 or more characters)</label
+          ><input type="password" id="sharePasscode" autocomplete="new-password" />
+        </div>
+        <div class="control-group">
+          <label for="sharePasscode2">Confirm passcode</label><input type="password" id="sharePasscode2" autocomplete="new-password" />
+        </div>
+        <p class="pass-error" id="sharePassError" role="alert"></p>
+        <p class="disclaimer">Without a passcode, anyone who has the link can read names, dates, and notes.</p>
+        <div class="setup-actions">
+          <button type="button" class="btn" id="btnShareCancel">Cancel</button>
+          <button type="button" class="btn btn-accent" id="btnShareCopy">Copy link</button>
+        </div>
+        <div id="shareResult">
+          <div id="shareQrBlock">
+            <div class="qr-wrap">
+              <canvas id="shareQrCanvas" width="280" height="280" role="img" aria-label="QR code for the share link"></canvas>
+            </div>
+            <p class="hint">Scan this QR code to open the share link on a phone.</p>
+          </div>
+          <p class="hint" id="shareQrTooLong">
+            This schedule has too much text to fit in a QR code. The link works as usual — send it with the Share button.
+          </p>
+          <p class="hint" id="shareLockedQrNote">
+            This link is locked. Share the passcode separately — the QR code and the link alone will not unlock the schedule.
+          </p>
+          <div class="setup-actions">
+            <button type="button" class="btn" id="btnDownloadQr">Download QR (PNG)</button>
+            <button type="button" class="btn btn-accent" id="btnNativeShare">Share</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="setup-overlay no-print" id="passcodeOverlay" role="dialog" aria-modal="true" aria-labelledby="passcodeTitle">
+      <div class="setup-card">
+        <h2 id="passcodeTitle">This calendar is locked</h2>
+        <p class="hint">Enter the passcode that was shared with you separately. The link alone does not reveal the schedule.</p>
+        <div class="control-group">
+          <label for="unlockPasscode">Passcode</label><input type="password" id="unlockPasscode" autocomplete="current-password" />
+        </div>
+        <p class="pass-error" id="passcodeError" role="alert">That passcode is incorrect. Try again.</p>
+        <div class="setup-actions"><button type="button" class="btn btn-accent" id="btnUnlockShare">Unlock</button></div>
+      </div>
+    </div>
+    <div class="setup-overlay no-print" id="licenseOverlay" role="dialog" aria-modal="true" aria-labelledby="licenseTitle">
+      <div class="setup-card">
+        <div class="brand-name brand-name-ink">Kingdom Building</div>
+        <h2 id="licenseTitle">Enter your license key</h2>
+        <p class="hint">This calendar is licensed for personal use. Enter the key from your purchase to unlock it on this device.</p>
+        <div class="control-group">
+          <label for="licenseKeyInput">License key</label
+          ><input
+            type="text"
+            id="licenseKeyInput"
+            autocomplete="off"
+            spellcheck="false"
+            autocapitalize="off"
+            placeholder="XXXX-XXXX-XXXX-XXXX"
+          />
+        </div>
+        <p class="pass-error" id="licenseError" role="alert"></p>
+        <div class="setup-actions">
+          <a
+            class="btn"
+            id="btnBuyLicense"
+            data-license-buy
+            href="https://maysiv.gumroad.com/l/cihrf"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Buy a license</a
+          >
+          <button type="button" class="btn" id="btnLicenseClose">Not now</button>
+          <button type="button" class="btn btn-accent" id="btnUnlockLicense">Unlock</button>
+        </div>
+        <p class="hint" style="margin-top:14px;margin-bottom:0;">Your key is in your Gumroad receipt email.</p>
+      </div>
+    </div>
+    <div class="setup-overlay no-print" id="setupOverlay" role="dialog" aria-modal="true" aria-labelledby="setupTitle">
+      <div class="setup-card">
+        <div class="brand-name brand-name-ink">Kingdom Building</div>
+        <h2 id="setupTitle">Set up your parenting calendar</h2>
+        <p class="hint">A one-time start so names and appreciation days are yours. You can change anything later in Settings.</p>
+        <div class="control-group">
+          <label for="setupChild">Child's name</label><input type="text" id="setupChild" maxlength="25" placeholder="Child's name" />
+        </div>
+        <div class="grid-2">
+          <div class="control-group">
+            <label for="setupP1">Parent 1 name</label><input type="text" id="setupP1" maxlength="20" placeholder="e.g. Jordan" />
+          </div>
+          <div class="control-group">
+            <label for="setupP2">Parent 2 name</label><input type="text" id="setupP2" maxlength="20" placeholder="e.g. Taylor" />
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="control-group">
+            <label for="setupMothers">Mother's Day goes to</label>
+            <select id="setupMothers">
+              <option value="skip">I'll assign this later</option>
+              <option value="p1">Parent 1</option>
+              <option value="p2">Parent 2</option>
+              <option value="both">Together</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="setupFathers">Father's Day goes to</label>
+            <select id="setupFathers">
+              <option value="skip">I'll assign this later</option>
+              <option value="p1">Parent 1</option>
+              <option value="p2">Parent 2</option>
+              <option value="both">Together</option>
+            </select>
+          </div>
+        </div>
+        <p class="disclaimer">This calendar is a planning aid only. It is not legal advice and is not a court order.</p>
+        <div class="setup-actions">
+          <button type="button" class="btn" id="btnSetupSkip">Skip for now</button>
+          <button type="button" class="btn btn-accent" id="btnSetupStart">Start calendar</button>
+        </div>
+      </div>
+    </div>
+    <script id="baked-state" type="application/json">
+      null
+    </script>
+    <script>
+      {{QR}}
+    </script>
+    <script>
+      {{APP}}
+    </script>
+  </body>
+</html>
