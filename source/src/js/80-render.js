@@ -106,6 +106,41 @@ function drawPickerNow() {
     });
     _0x21fbbd = state.baseBiweekly.filter(Boolean).length;
     _0x459b2d = 14;
+  } else if (state.baseMode === "cycle") {
+    // any number of nights that repeat: one tile per night of the cycle
+    const heading = document.createElement("div");
+    heading.className = "picker-row-label";
+    heading.textContent = `Repeating ${state.cycleLength}-day cycle`;
+    _0x1f0d2a.appendChild(heading);
+    const grid = document.createElement("div");
+    grid.className = "day-picker-grid";
+    for (let i = 0; i < state.cycleLength; i++) {
+      const mine = !!state.baseCycle[i];
+      const owner = mine ? _0x112075 : _0x16c715;
+      const tile = document.createElement("button");
+      tile.type = "button";
+      tile.className = "dp-tile " + (state.scheduleUnset ? "none" : mine ? "p1" : "p2");
+      tile.dataset.fk = "cy:" + i;
+      tile.innerHTML = `Day ${i + 1}<span class="dp-sub">${esc(state.scheduleUnset ? "—" : owner)}</span>`;
+      tile.setAttribute("aria-pressed", !state.scheduleUnset && mine ? "true" : "false");
+      tile.setAttribute("aria-label", state.scheduleUnset ? `Day ${i + 1}: not set` : `Day ${i + 1}: overnight with ${owner}`);
+      tile.title = `Day ${i + 1} of the cycle: ${state.scheduleUnset ? "not set" : owner}`;
+      tile.onclick = () => {
+        if (state.scheduleUnset) {
+          markScheduleSet();
+          state.baseCycle[i] = true;
+        } else {
+          state.baseCycle[i] = !state.baseCycle[i];
+        }
+        save();
+        drawPicker();
+        render();
+      };
+      grid.appendChild(tile);
+    }
+    _0x1f0d2a.appendChild(grid);
+    _0x21fbbd = state.baseCycle.filter(Boolean).length;
+    _0x459b2d = state.cycleLength;
   } else {
     const _0x59a0a1 = [
       "1st Week (Days 1–7)",
@@ -143,38 +178,46 @@ function drawPickerNow() {
     : `Base: <b>${esc(_0x112075)}</b> ${_0x21fbbd}/${_0x459b2d} (${_0x3260f1}%) • <b>${esc(_0x16c715)}</b> ${_0x34c315}/${_0x459b2d} (${_0x8d3aad}%)`;
 }
 
+// which summer window the week buttons were last drawn for, so a change of window (also by Undo) redraws them
+let drawnSummerKey = "";
 function drawSummerNow() {
-  function _0x340712(_0x1db543, _0x36c26b, _0x20ae88) {
-    const _0x53c387 = document.getElementById(_0x1db543);
-    _0x53c387.innerHTML = "";
-    let _0x1fccff = 0;
-    _0x36c26b.forEach(_0x41f2a3 => {
-      if (state.summerSelected[_0x41f2a3.id]) {
-        _0x1fccff++;
-      }
-      const _0x381432 = document.createElement("button");
-      _0x381432.className = "week-chip" + (state.summerSelected[_0x41f2a3.id] ? " selected" : "");
-      _0x381432.textContent = _0x41f2a3.label;
-      _0x381432.type = "button";
-      _0x381432.dataset.fk = "wk:" + _0x41f2a3.id;
-      _0x381432.setAttribute("aria-pressed", state.summerSelected[_0x41f2a3.id] ? "true" : "false");
-      _0x381432.onclick = () => {
-        state.summerSelected[_0x41f2a3.id] = !state.summerSelected[_0x41f2a3.id];
+  drawnSummerKey = state.summerStart + ">" + state.summerEnd;
+  const box = document.getElementById("summerMonths");
+  box.innerHTML = "";
+  const chips = summerChips();
+  [...new Set(chips.map(c => c.month))].forEach(month => {
+    const inMonth = chips.filter(c => c.month === month);
+    const picked = inMonth.filter(c => state.summerSelected[c.id]).length;
+    const first = inMonth[0].start;
+    const last = inMonth[inMonth.length - 1].end;
+    const partial = first > 1 || last < daysInMonth(2025, month);
+    const group = document.createElement("div");
+    group.className = "control-group";
+    const label = document.createElement("label");
+    label.innerHTML = `${esc(MONTH_NAMES[month])}${partial ? ` ${first}–${last}` : ""} (<span class="lbl-p1">${esc(p1Name())}</span>) <span class="week-status ok">${picked} selected</span>`;
+    const grid = document.createElement("div");
+    grid.className = "week-grid";
+    inMonth.forEach(chip => {
+      const on = !!state.summerSelected[chip.id];
+      const button = document.createElement("button");
+      button.className = "week-chip" + (on ? " selected" : "");
+      button.textContent = chip.label;
+      button.type = "button";
+      button.dataset.fk = "wk:" + chip.id;
+      button.setAttribute("aria-pressed", on ? "true" : "false");
+      button.onclick = () => {
+        state.summerSelected[chip.id] = !state.summerSelected[chip.id];
         save();
         drawSummer();
         render();
       };
-      _0x53c387.appendChild(_0x381432);
+      grid.appendChild(button);
     });
-    const _0x4f559f = document.getElementById(_0x20ae88);
-    _0x4f559f.textContent = `${_0x1fccff} selected`;
-    _0x4f559f.className = "week-status ok";
-  }
-  _0x340712("juneWeeks", JUNE_WEEKS, "juneStatus");
-  _0x340712("julyWeeks", JULY_WEEKS, "julyStatus");
-  _0x340712("augWeeks", AUGUST_WEEKS, "augStatus");
+    group.appendChild(label);
+    group.appendChild(grid);
+    box.appendChild(group);
+  });
 }
-
 function drawCustomHolidayList() {
   const _0x2bdab1 = document.getElementById("customHolList");
   _0x2bdab1.innerHTML = "";
@@ -240,6 +283,10 @@ function baseScheduleSummary() {
     const _0x3f9e80 = state.baseBiweekly.slice(0, 7).filter(Boolean).length;
     const _0x15f404 = state.baseBiweekly.slice(7, 14).filter(Boolean).length;
     return `Every 2 Weeks: <b>${esc(_0x2e2acc)}</b> has ${_0x3f9e80} nights in Wk 1 &amp; ${_0x15f404} nights in Wk 2 (anchor: ${esc(state.biweeklyAnchor)}).`;
+  }
+  if (state.baseMode === "cycle") {
+    const mine = state.baseCycle.filter(Boolean).length;
+    return `Repeating ${state.cycleLength}-day cycle: <b>${esc(_0x2e2acc)}</b> has ${mine} nights, <b>${esc(_0x3ef7de)}</b> has ${state.cycleLength - mine}. Day 1 is ${esc(state.cycleAnchor)}.`;
   }
   let _0x1a6cee = 0;
   let _0x1057bd = 0;
@@ -382,9 +429,9 @@ function renderChrome() {
     Object.keys(state.disabledByYear || {}).filter(_0xf45aba => _0xf45aba.startsWith(`${state.year}:`)).length +
     Object.keys(state.holidayYearOverrides || {}).filter(_0x58d706 => _0x58d706.startsWith(`${state.year}:`)).length;
   document.getElementById("btnResetHolidays").textContent = `Reset Holiday Tiles (${_0x1d04e7})`;
-  const _0xa8b3e6 = [...JUNE_WEEKS, ...JULY_WEEKS, ...AUGUST_WEEKS]
-    .filter(_0x445592 => state.summerSelected[_0x445592.id])
-    .map(_0x4991bb => _0x4991bb.label)
+  const _0xa8b3e6 = summerChips()
+    .filter(chip => state.summerSelected[chip.id])
+    .map(chip => chip.label)
     .join(", ");
   let _0x595f1a = "By mutual agreement";
   const _0x1109a8 = state.year % 2 === 0;
@@ -454,6 +501,7 @@ function renderChrome() {
   document.getElementById("notesReadonly").style.display = notesEditing ? "none" : "block";
   document.getElementById("notesEditorWrap").style.display = notesEditing ? "block" : "none";
   document.getElementById("btnToggleNotesEdit").textContent = notesEditing ? "Done Editing" : "Edit Notes";
+  renderScheduleControls();
   document.querySelectorAll(".toggle-btn").forEach(b => {
     b.setAttribute("aria-pressed", b.classList.contains("active") ? "true" : "false");
   });
@@ -723,6 +771,32 @@ function renderNow() {
       : `<span class="pill ${_0x1db5f9.owner}">${esc(ownerLabel(_0x1db5f9.owner))}</span>`;
     const _0x4ec15b = _0x1db5f9.rule && _0x1db5f9.rule.indexOf("Calendar uses") >= 0;
     _0x41729b.innerHTML = `<td><strong>${esc(_0x1db5f9.name)}</strong></td><td>${esc(_0x1db5f9.dates)}</td><td class="hide-mobile-col${_0x4ec15b ? " conflict-note" : ""}">${esc(_0x1db5f9.rule)}</td><td>${_0x5daa78}</td>`;
+    if (_0x1db5f9.rotates) {
+      // alternating holidays can be turned around for good: the parent who had even years takes odd years
+      const swap = document.createElement("button");
+      swap.type = "button";
+      swap.className = "btn btn-sm swap-years no-print";
+      swap.textContent = "⇄";
+      swap.title = _0x1db5f9.flipped ? "Back to the usual years" : `Swap who has ${_0x1db5f9.name} in even and odd years`;
+      swap.setAttribute("aria-label", `Swap who has ${_0x1db5f9.name} in even and odd years`);
+      swap.setAttribute("aria-pressed", _0x1db5f9.flipped ? "true" : "false");
+      swap.dataset.fk = "swap:" + _0x1db5f9.key;
+      swap.onclick = () => {
+        if (!requireLicense()) {
+          return;
+        }
+        const flips = Object.assign({}, state.holidayFlip);
+        if (flips[_0x1db5f9.key]) {
+          delete flips[_0x1db5f9.key];
+        } else {
+          flips[_0x1db5f9.key] = true;
+        }
+        state.holidayFlip = flips;
+        save();
+        render();
+      };
+      _0x41729b.lastElementChild.appendChild(swap);
+    }
     _0x10c1eb.appendChild(_0x41729b);
   });
 }

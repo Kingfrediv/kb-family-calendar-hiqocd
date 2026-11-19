@@ -93,40 +93,51 @@ wireBirthdayPicker("bdayP2Month", "bdayP2Day", "bdayP2M", "bdayP2D");
 
 fillMonthDaySelects("customHolMonth", "customHolDay");
 
-const PRESETS = {
-  "7-7": [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-  "2-2-5-5": [1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
-  "2-2-3": [1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0],
-  "3-4-4-3": [1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
-  "5-2-2-5": [1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0]
-};
-
-function presetPattern(_0x265b44) {
-  if (PRESETS[_0x265b44]) {
-    return PRESETS[_0x265b44].map(Boolean);
+// Presets. mode "biweekly": 14 nights (1 = Parent 1) in order from the first day of week 1.
+// mode "weekly": 7 nights by weekday, Sunday first, so the week-start setting makes no difference.
+// mode "cycle": any number of nights that repeat without a break.
+// Slots may be given directly or built (for the weekend patterns, which depend on the week-start setting).
+function weekendSlots(startWeekday, nights, midweek) {
+  const ws = state.weekStartsMonday ? 1 : 0;
+  const slots = new Array(14).fill(true);
+  const first = [...Array(14).keys()].find(i => (ws + i) % 7 === startWeekday);
+  for (let n = 0; n < nights; n++) {
+    slots[first + n] = false;
   }
-  const _0x35195e = state.weekStartsMonday ? 1 : 0;
-  const _0x678138 = new Array(14).fill(true);
-  let _0x43f4 = -1;
-  for (let _0x194d6d = 0; _0x194d6d < 14; _0x194d6d++) {
-    if ((_0x35195e + _0x194d6d) % 7 === 5) {
-      _0x43f4 = _0x194d6d;
-      break;
-    }
-  }
-  if (_0x43f4 >= 0) {
-    _0x678138[_0x43f4] = false;
-    _0x678138[_0x43f4 + 1] = false;
-    _0x678138[_0x43f4 + 2] = false;
-  }
-  if (_0x265b44 === "eow-mid") {
-    for (let _0x174242 = 0; _0x174242 < 14; _0x174242++) {
-      if ((_0x35195e + _0x174242) % 7 === 3) {
-        _0x678138[_0x174242] = false;
+  if (midweek) {
+    for (let i = 0; i < 14; i++) {
+      if ((ws + i) % 7 === 3) {
+        slots[i] = false;
       }
     }
   }
-  return _0x678138;
+  return slots;
+}
+
+const PRESET_DEFS = {
+  "7-7": { mode: "biweekly", slots: [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0], done: "Alternating weeks (7-7) applied" },
+  "2-2-5-5": { mode: "biweekly", slots: [1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0], done: "2-2-5-5 schedule applied" },
+  "2-2-3": { mode: "biweekly", slots: [1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0], done: "2-2-3 schedule applied" },
+  "3-4-4-3": { mode: "biweekly", slots: [1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0], done: "3-4-4-3 schedule applied" },
+  "5-2-2-5": { mode: "biweekly", slots: [1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0], done: "5-2-2-5 schedule applied" },
+  "3-3-4-4": { mode: "biweekly", slots: [1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0], done: "3-3-4-4 schedule applied" },
+  "4-3-3-4": { mode: "biweekly", slots: [1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0], done: "4-3-3-4 schedule applied" },
+  eow: { mode: "biweekly", build: () => weekendSlots(5, 3, false), done: () => `Every other weekend applied (Fri–Sun with ${p2Name()})` },
+  "eow-mid": { mode: "biweekly", build: () => weekendSlots(5, 3, true), done: "Every other weekend + midweek overnight applied" },
+  "eow-thu": { mode: "biweekly", build: () => weekendSlots(4, 4, false), done: () => `Every other long weekend applied (Thu–Sun with ${p2Name()})` },
+  "4-3": { mode: "weekly", slots: [0, 1, 1, 1, 1, 0, 0], done: () => `4-3 applied: ${p1Name()} Mon–Thu, ${p2Name()} Fri–Sun` },
+  "5-2": { mode: "weekly", slots: [0, 1, 1, 1, 1, 1, 0], done: () => `5-2 applied: ${p1Name()} on weekdays, ${p2Name()} on weekends` },
+  "4-4": { mode: "cycle", slots: [1, 1, 1, 1, 0, 0, 0, 0], done: "4 on, 4 off (8-day cycle) applied" },
+  "3-3": { mode: "cycle", slots: [1, 1, 1, 0, 0, 0], done: "3 on, 3 off (6-day cycle) applied" },
+  "5-5": { mode: "cycle", slots: [1, 1, 1, 1, 1, 0, 0, 0, 0, 0], done: "5 on, 5 off (10-day cycle) applied" }
+};
+
+function presetSlots(id) {
+  const def = PRESET_DEFS[id];
+  if (!def) {
+    return null;
+  }
+  return (def.slots || def.build()).map(Boolean);
 }
 
 function patternForWeekStart(_0x33ec38) {
@@ -149,47 +160,59 @@ function boolArraysEqual(_0x121745, _0xb0faaf) {
   );
 }
 
-function applyPreset(_0x5b3b0c) {
+function applyPreset(id) {
   if (!requireLicense()) {
     return;
   }
-  const _0x5f9314 = presetPattern(_0x5b3b0c);
-  if (!_0x5f9314) {
+  const def = PRESET_DEFS[id];
+  const slots = presetSlots(id);
+  if (!def || !slots) {
     return;
   }
   markScheduleSet();
-  state.baseMode = "biweekly";
-  state.baseBiweekly = patternForWeekStart(_0x5f9314);
+  if (def.mode === "biweekly") {
+    state.baseMode = "biweekly";
+    state.baseBiweekly = patternForWeekStart(slots);
+  } else if (def.mode === "weekly") {
+    state.baseMode = "weekly";
+    state.baseWeekly = slots;
+  } else {
+    state.baseMode = "cycle";
+    state.cycleLength = slots.length;
+    state.baseCycle = slots;
+  }
   lastUndoPushAt = 0;
   save();
   render();
-  const _0x58c632 = {
-    "7-7": "Alternating weeks (7-7) applied",
-    "2-2-5-5": "2-2-5-5 schedule applied",
-    "2-2-3": "2-2-3 schedule applied",
-    "3-4-4-3": "3-4-4-3 schedule applied",
-    "5-2-2-5": "5-2-2-5 schedule applied",
-    eow: `Every other weekend applied (Fri–Sun with ${p2Name()})`,
-    "eow-mid": "Every other weekend + midweek overnight applied"
-  };
-  toast(_0x58c632[_0x5b3b0c] || "Schedule preset applied");
+  toast(textOrCall(def.done) || "Schedule preset applied");
 }
 
+// Highlights the preset that matches what is set now (swapping the two parents still counts as a match).
 function markActivePreset() {
-  const _0x15438e = document.querySelectorAll(".preset-btn[data-preset]");
-  if (!_0x15438e.length) {
-    return;
-  }
-  const _0x1fabf9 = state.baseMode === "biweekly" ? state.baseBiweekly : null;
-  _0x15438e.forEach(_0x534b20 => {
-    const _0x858e78 = _0x534b20.getAttribute("data-preset");
-    let _0x1c0fa8 = false;
-    if (_0x1fabf9) {
-      const _0x3de976 = patternForWeekStart(presetPattern(_0x858e78));
-      const _0x1f3b62 = _0x3de976.map(_0x588a95 => !_0x588a95);
-      _0x1c0fa8 = boolArraysEqual(_0x1fabf9, _0x3de976) || boolArraysEqual(_0x1fabf9, _0x1f3b62);
+  const buttons = document.querySelectorAll(".preset-btn[data-preset]");
+  buttons.forEach(button => {
+    const id = button.getAttribute("data-preset");
+    const def = PRESET_DEFS[id];
+    let active = false;
+    if (def) {
+      const slots = presetSlots(id);
+      let current = null;
+      let mine = null;
+      if (def.mode === "biweekly" && state.baseMode === "biweekly") {
+        mine = patternForWeekStart(slots);
+        current = state.baseBiweekly;
+      } else if (def.mode === "weekly" && state.baseMode === "weekly") {
+        mine = slots;
+        current = state.baseWeekly;
+      } else if (def.mode === "cycle" && state.baseMode === "cycle" && state.cycleLength === slots.length) {
+        mine = slots;
+        current = state.baseCycle;
+      }
+      if (current) {
+        active = boolArraysEqual(current, mine) || boolArraysEqual(current, mine.map(v => !v));
+      }
     }
-    _0x534b20.classList.toggle("active", _0x1c0fa8);
-    _0x534b20.setAttribute("aria-pressed", _0x1c0fa8 ? "true" : "false");
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
   });
 }

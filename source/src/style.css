@@ -1393,3 +1393,19 @@ body.license-locked #btnLicenseClose {
   font-weight: 800;
   cursor: pointer;
 }
+
+/* ---- second-release settings ---- */
+.pack-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.pack-row label {
+  margin: 0;
+}
+.swap-years {
+  margin-left: 6px;
+  padding: 1px 7px;
+}

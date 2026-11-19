@@ -59,7 +59,21 @@ function defaultState() {
     overrides: {},
     mothersDayOwner: "skip",
     fathersDayOwner: "skip",
-    agreementNotes: ""
+    agreementNotes: "",
+    // ---- added in the second release. Defaults here are also what share links assume (see sampleState),
+    // ---- so a default must never change once released.
+    region: "us",
+    longWeekends: false,
+    splitChristmas: false,
+    holidayFlip: {},
+    packs: { jewish: "off", islamic: "off", hindu: "off", chinese: "off" },
+    summerStart: "06-01",
+    summerEnd: "08-14",
+    winterStartDay: 20,
+    winterEndDay: 2,
+    cycleLength: 14,
+    baseCycle: new Array(14).fill(false),
+    cycleAnchor: "2026-01-04"
   };
 }
 

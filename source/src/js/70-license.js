@@ -334,7 +334,7 @@ function blockEditsWhenUnlicensed(_0x4c4f63) {
   }
   const _0x49d09f =
     _0x3b65ce.closest(
-      "button.day-cell,.preset-btn,.dp-tile,.week-chip,.hol-tile,#btnSaveBakedHtml,#btnCopyLink,#btnExportIcs,#btnPrint,#btnExportCsv,#btnBackup,#btnRestore,#btnUndo,#btnSaveShared,#btnDownloadShared,#btnBaseFlip,#btnBaseClear,#btnAddCustomHol,#btnAddSchoolEvent,#btnToggleNotesEdit,#btnResetOverrides,#notesTextarea"
+      "button.day-cell,.preset-btn,.dp-tile,.week-chip,.hol-tile,.swap-years,#btnSaveBakedHtml,#btnCopyLink,#btnExportIcs,#btnPrint,#btnExportCsv,#btnBackup,#btnRestore,#btnUndo,#btnSaveShared,#btnDownloadShared,#btnBaseFlip,#btnBaseClear,#btnAddCustomHol,#btnAddSchoolEvent,#btnToggleNotesEdit,#btnResetOverrides,#notesTextarea"
     ) ||
     (_0x3b65ce.closest(".sidebar") && _0x3b65ce.closest("button,input,select,textarea,label"));
   if (!_0x49d09f) {

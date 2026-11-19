@@ -1,3 +1,11 @@
+// ---------------------------------------------------------------------------------------------
+// The schedule engine: who has each night.
+// Order of precedence for one day: a day you tapped > a holiday or break > a school-calendar entry > summer > the base pattern.
+// ---------------------------------------------------------------------------------------------
+
+// ---- base pattern ----------------------------------------------------------------------------
+
+// Which of the 14 slots (week 1 Sun..Sat, week 2 Sun..Sat) a real date falls in.
 function kbBiweekIndex(dateObj) {
   const ws = state.weekStartsMonday ? 1 : 0;
   const anchor = parseDateStr(state.biweeklyAnchor || `${dateObj.getFullYear()}-01-04`);
@@ -31,680 +39,283 @@ function kbSetWeekStart(monday) {
   state.baseBiweekly = next;
 }
 
-function baseOwner(_0x44b6ca, _0x3a8470, _0x6040e4) {
+// Position in a repeating cycle of any length (2 to 28 days) counted from the cycle's start date.
+function cycleIndex(dateObj) {
+  const length = state.cycleLength;
+  const anchor = parseDateStr(state.cycleAnchor || "2026-01-04");
+  const diff = Math.round((dateObj - anchor) / 86400000);
+  return ((diff % length) + length) % length;
+}
+
+function baseOwner(year, month0, day) {
   if (state.scheduleUnset) {
     return "none";
   }
-  const _0x2607bf = noonDate(_0x44b6ca, _0x3a8470, _0x6040e4);
-  const _0xd8e7b8 = _0x2607bf.getDay();
+  const date = noonDate(year, month0, day);
+  const dow = date.getDay();
   if (state.baseMode === "weekly") {
-    if (state.baseWeekly[_0xd8e7b8]) {
-      return "p1";
-    } else {
-      return "p2";
-    }
+    return state.baseWeekly[dow] ? "p1" : "p2";
   }
   if (state.baseMode === "biweekly") {
-    if (state.baseBiweekly[kbBiweekIndex(_0x2607bf)]) {
-      return "p1";
-    } else {
-      return "p2";
-    }
+    return state.baseBiweekly[kbBiweekIndex(date)] ? "p1" : "p2";
   }
-  if (state.baseMonthly[(Math.ceil(_0x6040e4 / 7) - 1) * 7 + _0xd8e7b8]) {
-    return "p1";
-  } else {
-    return "p2";
+  if (state.baseMode === "cycle") {
+    return state.baseCycle[cycleIndex(date)] ? "p1" : "p2";
   }
+  return state.baseMonthly[(Math.ceil(day / 7) - 1) * 7 + dow] ? "p1" : "p2";
 }
 
-function summerWeekSelected(_0x2790ef, _0x5969ec) {
-  if (_0x2790ef === 5) {
-    return JUNE_WEEKS.some(
-      _0x17794f => state.summerSelected[_0x17794f.id] && _0x5969ec >= _0x17794f.start && _0x5969ec <= _0x17794f.end
-    );
-  }
-  if (_0x2790ef === 6) {
-    return JULY_WEEKS.some(
-      _0x2eae0f => state.summerSelected[_0x2eae0f.id] && _0x5969ec >= _0x2eae0f.start && _0x5969ec <= _0x2eae0f.end
-    );
-  }
-  if (_0x2790ef === 7 && _0x5969ec <= 14) {
-    return AUGUST_WEEKS.some(
-      _0x5c2893 => state.summerSelected[_0x5c2893.id] && _0x5969ec >= _0x5c2893.start && _0x5969ec <= _0x5c2893.end
-    );
-  }
-  return null;
+// ---- summer ----------------------------------------------------------------------------------
+
+const MONTH_ABBR_LOWER = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
+// "06-01" -> [5, 1]  (month counted from 0, day)
+function monthDayParts(text) {
+  const parts = String(text).split("-").map(Number);
+  return [parts[0] - 1, parts[1]];
 }
 
-function holidayPriority(_0x5055e6, _0x7d1154, _0x2eb0af, _0x3291b0) {
-  if (_0x5055e6 === "birthday") {
-    return 40;
+function isMonthDayText(text) {
+  if (typeof text !== "string" || !/^\d{2}-\d{2}$/.test(text)) {
+    return false;
   }
-  if (_0x7d1154 === "both") {
-    return 30;
-  }
-  if (_0x2eb0af) {
-    return 25;
-  }
-  if (_0x3291b0 === "christmas" || _0x3291b0 === "xmasEve" || _0x3291b0 === "nye" || _0x3291b0 === "newyears") {
-    return 22;
-  }
-  if (_0x5055e6 === "holiday") {
-    return 20;
-  }
-  if (_0x5055e6 === "break") {
-    return 10;
-  }
-  return 15;
+  const [m, d] = monthDayParts(text);
+  return m >= 0 && m <= 11 && d >= 1 && d <= [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m];
 }
 
-function isHolidayOff(_0x20d784, _0x4b1fba) {
-  const _0x41f1cc = `${_0x20d784}:${_0x4b1fba}`;
-  if (Object.prototype.hasOwnProperty.call(state.disabledByYear || {}, _0x41f1cc)) {
-    return !!state.disabledByYear[_0x41f1cc];
-  }
-  return kbOffByDefault(_0x4b1fba);
+function inSummerWindow(month0, day) {
+  const [sm, sd] = monthDayParts(state.summerStart);
+  const [em, ed] = monthDayParts(state.summerEnd);
+  const key = month0 * 100 + day;
+  return key >= sm * 100 + sd && key <= em * 100 + ed;
 }
 
-function kbOffByDefault(_0x4b1fba) {
-  if (_0x4b1fba === "mothersDay") {
-    return (state.mothersDayOwner || "skip") === "skip";
+// The week buttons for the summer window: 1st-7th, 8th-14th, 15th-21st, 22nd-28th and 29th to month end,
+// cut off at the window's edges. With the default window these are the original twelve (jun1 ... aug2).
+let summerChipCache = { key: "", chips: [] };
+function summerChips() {
+  const key = state.summerStart + ">" + state.summerEnd;
+  if (summerChipCache.key === key) {
+    return summerChipCache.chips;
   }
-  if (_0x4b1fba === "fathersDay") {
-    return (state.fathersDayOwner || "skip") === "skip";
-  }
-  return !!(state.disabledHolidays || {})[_0x4b1fba];
-}
-
-function appreciationDayDefault(_0x4f2bac) {
-  const _0x2b82b9 = (_0x4f2bac === "mothersDay" ? state.mothersDayOwner : state.fathersDayOwner) || "skip";
-  if (_0x2b82b9 === "skip") {
-    return "both";
-  } else {
-    return _0x2b82b9;
-  }
-}
-
-function buildHolidays(_0x1dbdcb) {
-  const _0xd21ec4 = {};
-  const _0x248898 = [];
-  const { springBreakStart: _0x408e6a } = schoolDatesFor(_0x1dbdcb);
-  const _0x5ce627 = p1Name();
-  const _0x3222ac = p2Name();
-  function _0x36b446({
-    key: _0x6e074a,
-    startStr: _0x5b2a7f,
-    len = 1,
-    defaultOwner: _0xd6fca9,
-    label: _0x180ce1,
-    shortName: _0xa20a22,
-    icon: _0xc9bc50,
-    kind: _0x495188,
-    ruleDesc: _0x4146c5,
-    fixed = false,
-    alwaysApplies = false
-  }) {
-    if (!_0x5b2a7f) {
-      _0x248898.push({
-        key: _0x6e074a,
-        name: _0x180ce1,
-        shortName: _0xa20a22 || _0x180ce1,
-        icon: _0xc9bc50,
-        dates: "",
-        rule: _0x4146c5,
-        owner: _0xd6fca9,
-        disabled: true,
-        fixed: fixed,
-        defaultOwner: _0xd6fca9
+  const [sm, sd] = monthDayParts(state.summerStart);
+  const [em, ed] = monthDayParts(state.summerEnd);
+  const chips = [];
+  for (let m = sm; m <= em; m++) {
+    const last = daysInMonth(2025, m);
+    for (let i = 0; i < 5; i++) {
+      let start = i * 7 + 1;
+      let end = Math.min(i * 7 + 7, last);
+      if (start > last) {
+        break;
+      }
+      if (m === sm) {
+        start = Math.max(start, sd);
+      }
+      if (m === em) {
+        end = Math.min(end, ed);
+      }
+      if (start > end) {
+        continue;
+      }
+      chips.push({
+        id: MONTH_ABBR_LOWER[m] + (i + 1),
+        month: m,
+        start,
+        end,
+        label: `${MONTH_SHORT[m]} ${start}${end > start ? "–" + end : ""}`
       });
-      return;
     }
-    const _0xafe1bc = isHolidayOff(_0x1dbdcb, _0x6e074a);
-    const _0x5485a5 = state.holidayYearOverrides[`${_0x1dbdcb}:${_0x6e074a}`];
-    const _0x5af7a9 = _0x5485a5 || _0xd6fca9;
-    const _0x223a08 = holidayPriority(_0x495188, _0x5af7a9, alwaysApplies, _0x6e074a);
-    let _0x3d154e = "";
-    if (!_0xafe1bc) {
-      for (let _0x7a510b = 0; _0x7a510b < len; _0x7a510b++) {
-        const _0x1f3d62 = addDays(_0x5b2a7f, _0x7a510b);
-        if (_0x1f3d62.startsWith(`${_0x1dbdcb}-`)) {
-          const _0x4b0448 = parseDateStr(_0x1f3d62);
-          const _0x50da4a = _0x4b0448.getMonth();
-          const _0xd28a6d = _0x4b0448.getDate();
-          const _0x425ccb =
-            state.summerEnabled && (_0x50da4a === 5 || _0x50da4a === 6 || (_0x50da4a === 7 && _0xd28a6d <= 14));
-          if (
-            _0x425ccb &&
-            !state.holidaysOverrideSummer &&
-            _0x6e074a === "july4" &&
-            summerWeekSelected(_0x50da4a, _0xd28a6d)
-          ) {
-            _0x3d154e = `(Summer week keeps it: ${ownerLabel("p1")})`;
-          } else if (_0xd21ec4[_0x1f3d62] && (_0xd21ec4[_0x1f3d62].pri || 0) > _0x223a08) {
-            _0x3d154e += `${_0x3d154e ? " " : ""}(Calendar uses ${_0xd21ec4[_0x1f3d62].label} on this date)`;
-          } else {
-            const _0x40d50a = _0xd21ec4[_0x1f3d62] ? _0xd21ec4[_0x1f3d62].label : "";
-            _0xd21ec4[_0x1f3d62] = {
-              owner: _0x5af7a9,
-              label: _0x180ce1,
-              icon: _0xc9bc50,
-              kind: _0x495188,
-              alwaysApplies: alwaysApplies,
-              pri: _0x223a08,
-              displaced: _0x40d50a
-            };
-            if (_0x40d50a) {
-              _0x3d154e += `${_0x3d154e ? " " : ""}(Overrides ${_0x40d50a})`;
-            }
-          }
-        }
-      }
-    }
-    _0x248898.push({
-      key: _0x6e074a,
-      name: _0x180ce1,
-      shortName: _0xa20a22 || _0x180ce1,
-      icon: _0xc9bc50,
-      dates: len > 1 ? `${_0x5b2a7f} to ${addDays(_0x5b2a7f, len - 1)}` : _0x5b2a7f,
-      rule: (_0x5485a5 ? `Custom (${_0x4146c5})` : _0x4146c5) + (_0x3d154e ? " " + _0x3d154e.trim() : ""),
-      owner: _0x5af7a9,
-      disabled: _0xafe1bc,
-      fixed: fixed,
-      defaultOwner: _0xd6fca9,
-      conflict: _0x3d154e
-    });
   }
-  if (isValidMonthDay(state.bdayChildM, state.bdayChildD)) {
-    _0x36b446({
-      key: "bdayChild",
-      startStr: clampedDateStr(_0x1dbdcb, Number(state.bdayChildM), Number(state.bdayChildD)),
-      defaultOwner: "both",
-      label: childBirthdayLabel(),
-      shortName: childBirthdayLabel(),
-      icon: "🎂",
-      kind: "birthday",
-      ruleDesc: "All Together (Shared)",
-      fixed: true,
-      alwaysApplies: true
-    });
-  }
-  if (isValidMonthDay(state.bdayP2M, state.bdayP2D)) {
-    _0x36b446({
-      key: "bdayP2",
-      startStr: clampedDateStr(_0x1dbdcb, Number(state.bdayP2M), Number(state.bdayP2D)),
-      defaultOwner: "p2",
-      label: `${_0x3222ac}'s Birthday`,
-      shortName: `${_0x3222ac}'s B-Day`,
-      icon: "🎁",
-      kind: "birthday",
-      ruleDesc: `Always ${_0x3222ac}`,
-      fixed: true,
-      alwaysApplies: true
-    });
-  }
-  if (isValidMonthDay(state.bdayP1M, state.bdayP1D)) {
-    _0x36b446({
-      key: "bdayP1",
-      startStr: clampedDateStr(_0x1dbdcb, Number(state.bdayP1M), Number(state.bdayP1D)),
-      defaultOwner: "p1",
-      label: `${_0x5ce627}'s Birthday`,
-      shortName: `${_0x5ce627}'s B-Day`,
-      icon: "🎉",
-      kind: "birthday",
-      ruleDesc: `Always ${_0x5ce627}`,
-      fixed: true,
-      alwaysApplies: true
-    });
-  }
-  _0x36b446({
-    key: "newyears",
-    startStr: dateStr(_0x1dbdcb, 0, 1),
-    defaultOwner: rotationOwner(_0x1dbdcb - 1, "B"),
-    label: "New Year's Day",
-    shortName: "New Year's Day",
-    icon: "🎆",
-    kind: "holiday",
-    ruleDesc: `Alternating (${_0x1dbdcb - 1} New Year)`
-  });
-  _0x36b446({
-    key: "prevWB2",
-    startStr: dateStr(_0x1dbdcb, 0, 1),
-    len: 2,
-    defaultOwner: rotationOwner(_0x1dbdcb - 1, "B"),
-    label: "Winter Break (Jan 1–2)",
-    shortName: "Jan 1–2 Break",
-    icon: "❄️",
-    kind: "break",
-    ruleDesc: `Alternating (${_0x1dbdcb - 1} 2nd Half)`
-  });
-  _0x36b446({
-    key: "mlk",
-    startStr: nthWeekday(_0x1dbdcb, 0, 1, 3),
-    defaultOwner: rotationOwner(_0x1dbdcb, "A"),
-    label: "MLK Jr. Day",
-    shortName: "MLK Day",
-    icon: "★",
-    kind: "holiday",
-    ruleDesc: "Alternating (Group A)"
-  });
-  _0x36b446({
-    key: "pres",
-    startStr: nthWeekday(_0x1dbdcb, 1, 1, 3),
-    defaultOwner: rotationOwner(_0x1dbdcb, "B"),
-    label: "Presidents' Day",
-    shortName: "Presidents' Day",
-    icon: "★",
-    kind: "holiday",
-    ruleDesc: "Alternating (Group B)"
-  });
-  _0x36b446({
-    key: "springBreak",
-    startStr: _0x408e6a,
-    len: 7,
-    defaultOwner: rotationOwner(_0x1dbdcb, "A"),
-    label: "Spring Break (1 Week)",
-    shortName: "Spring Break",
-    icon: "🌷",
-    kind: "break",
-    ruleDesc: "Alternating (Group A)"
-  });
-  _0x36b446({
-    key: "easter",
-    startStr: easterDate(_0x1dbdcb),
-    defaultOwner: rotationOwner(_0x1dbdcb, "B"),
-    label: "Easter Sunday",
-    shortName: "Easter",
-    icon: "🐣",
-    kind: "holiday",
-    ruleDesc: "Alternating (Group B)"
-  });
-  const _0x1957bf = appreciationDayDefault("mothersDay");
-  _0x36b446({
-    key: "mothersDay",
-    startStr: nthWeekday(_0x1dbdcb, 4, 0, 2),
-    defaultOwner: _0x1957bf,
-    label: "Mother's Day",
-    shortName: "Mother's Day",
-    icon: "💐",
-    kind: "holiday",
-    ruleDesc: _0x1957bf === "both" ? "Together" : `Assigned ${ownerLabel(_0x1957bf)}`,
-    alwaysApplies: true
-  });
-  _0x36b446({
-    key: "memorial",
-    startStr: nthWeekday(_0x1dbdcb, 4, 1, -1),
-    defaultOwner: rotationOwner(_0x1dbdcb, "A"),
-    label: "Memorial Day",
-    shortName: "Memorial Day",
-    icon: "★",
-    kind: "holiday",
-    ruleDesc: "Alternating (Group A)"
-  });
-  const _0x568c17 = appreciationDayDefault("fathersDay");
-  _0x36b446({
-    key: "fathersDay",
-    startStr: nthWeekday(_0x1dbdcb, 5, 0, 3),
-    defaultOwner: _0x568c17,
-    label: "Father's Day",
-    shortName: "Father's Day",
-    icon: "👔",
-    kind: "holiday",
-    ruleDesc: _0x568c17 === "both" ? "Together" : `Assigned ${ownerLabel(_0x568c17)}`,
-    alwaysApplies: true
-  });
-  _0x36b446({
-    key: "juneteenth",
-    startStr: dateStr(_0x1dbdcb, 5, 19),
-    defaultOwner: rotationOwner(_0x1dbdcb, "A"),
-    label: "Juneteenth",
-    shortName: "Juneteenth",
-    icon: "✊",
-    kind: "holiday",
-    ruleDesc: "Alternating (Group A)"
-  });
-  _0x36b446({
-    key: "july4",
-    startStr: dateStr(_0x1dbdcb, 6, 4),
-    defaultOwner: rotationOwner(_0x1dbdcb, "B"),
-    label: "Independence Day (Jul 4)",
-    shortName: "July 4th",
-    icon: "🎆",
-    kind: "holiday",
-    ruleDesc: "Alternating (Group B)"
-  });
-  _0x36b446({
-    key: "parentsDay",
-    startStr: nthWeekday(_0x1dbdcb, 6, 0, 4),
-    defaultOwner: "both",
-    label: "National Parents' Day",
-    shortName: "Parents' Day",
-    icon: "💛",
-    kind: "holiday",
-    ruleDesc: "Inclusive Day",
-    alwaysApplies: true
-  });
-  _0x36b446({
-    key: "labor",
-    startStr: nthWeekday(_0x1dbdcb, 8, 1, 1),
-    defaultOwner: rotationOwner(_0x1dbdcb, "A"),
-    label: "Labor Day",
-    shortName: "Labor Day",
-    icon: "★",
-    kind: "holiday",
-    ruleDesc: "Alternating (Group A)"
-  });
-  _0x36b446({
-    key: "indigenousDay",
-    startStr: nthWeekday(_0x1dbdcb, 9, 1, 2),
-    defaultOwner: rotationOwner(_0x1dbdcb, "B"),
-    label: "Indigenous Peoples' Day",
-    shortName: "Indigenous Day",
-    icon: "🌎",
-    kind: "holiday",
-    ruleDesc: "Alternating (Group B)"
-  });
-  _0x36b446({
-    key: "halloween",
-    startStr: dateStr(_0x1dbdcb, 9, 31),
-    defaultOwner: rotationOwner(_0x1dbdcb, "B"),
-    label: "Halloween",
-    shortName: "Halloween",
-    icon: "🎃",
-    kind: "holiday",
-    ruleDesc: "Alternating (Group B)"
-  });
-  _0x36b446({
-    key: "vets",
-    startStr: dateStr(_0x1dbdcb, 10, 11),
-    defaultOwner: rotationOwner(_0x1dbdcb, "A"),
-    label: "Veterans Day",
-    shortName: "Veterans Day",
-    icon: "★",
-    kind: "holiday",
-    ruleDesc: "Alternating (Group A)"
-  });
-  const _0x242d0a = nthWeekday(_0x1dbdcb, 10, 4, 4);
-  _0x36b446({
-    key: "thanksgiving",
-    startStr: addDays(_0x242d0a, -1),
-    len: 5,
-    defaultOwner: rotationOwner(_0x1dbdcb, "B"),
-    label: "Thanksgiving Break (Wed–Sun)",
-    shortName: "Thanksgiving",
-    icon: "🦃",
-    kind: "break",
-    ruleDesc: "Alternating (Group B)"
-  });
-  _0x36b446({
-    key: "xmasEve",
-    startStr: dateStr(_0x1dbdcb, 11, 24),
-    defaultOwner: rotationOwner(_0x1dbdcb, "A"),
-    label: "Christmas Eve",
-    shortName: "Christmas Eve",
-    icon: "🎄",
-    kind: "holiday",
-    ruleDesc: "Alternating (Group A)"
-  });
-  _0x36b446({
-    key: "christmas",
-    startStr: dateStr(_0x1dbdcb, 11, 25),
-    defaultOwner: rotationOwner(_0x1dbdcb, "A"),
-    label: "Christmas Day",
-    shortName: "Christmas",
-    icon: "🎄",
-    kind: "holiday",
-    ruleDesc: "Alternating (Group A)"
-  });
-  _0x36b446({
-    key: "wb1",
-    startStr: dateStr(_0x1dbdcb, 11, 20),
-    len: 7,
-    defaultOwner: rotationOwner(_0x1dbdcb, "A"),
-    label: "Winter Break (1st Half)",
-    shortName: "Winter Brk 1",
-    icon: "🎄",
-    kind: "break",
-    ruleDesc: "Alternating (Group A)"
-  });
-  _0x36b446({
-    key: "wb2",
-    startStr: dateStr(_0x1dbdcb, 11, 27),
-    len: 5,
-    defaultOwner: rotationOwner(_0x1dbdcb, "B"),
-    label: "Winter Break (2nd Half)",
-    shortName: "Winter Brk 2",
-    icon: "❄️",
-    kind: "break",
-    ruleDesc: "Alternating (Group B)"
-  });
-  _0x36b446({
-    key: "nye",
-    startStr: dateStr(_0x1dbdcb, 11, 31),
-    defaultOwner: rotationOwner(_0x1dbdcb, "B"),
-    label: "New Year's Eve",
-    shortName: "New Year's Eve",
-    icon: "🎇",
-    kind: "holiday",
-    ruleDesc: "Alternating (Group B)"
-  });
-  (state.customHolidays || []).forEach(_0x2e904f => {
-    let _0x1ae75e = "both";
-    let _0x1e7fc2 = "Together (50/50)";
-    if (_0x2e904f.rule === "p1") {
-      _0x1ae75e = "p1";
-      _0x1e7fc2 = `Always ${_0x5ce627}`;
-    } else if (_0x2e904f.rule === "p2") {
-      _0x1ae75e = "p2";
-      _0x1e7fc2 = `Always ${_0x3222ac}`;
-    } else if (_0x2e904f.rule === "altA") {
-      _0x1ae75e = rotationOwner(_0x1dbdcb, "A");
-      _0x1e7fc2 = "Alternating (Group A)";
-    } else if (_0x2e904f.rule === "altB") {
-      _0x1ae75e = rotationOwner(_0x1dbdcb, "B");
-      _0x1e7fc2 = "Alternating (Group B)";
-    }
-    _0x36b446({
-      key: "cust_" + _0x2e904f.id,
-      startStr: clampedDateStr(_0x1dbdcb, Number(_0x2e904f.m), Number(_0x2e904f.d)),
-      defaultOwner: _0x1ae75e,
-      label: _0x2e904f.name,
-      shortName: _0x2e904f.name,
-      icon: (_0x2e904f.emoji || "✨").trim() || "✨",
-      kind: "holiday",
-      ruleDesc: _0x1e7fc2
-    });
-  });
-  return {
-    map: _0xd21ec4,
-    summaryRows: _0x248898
-  };
+  summerChipCache = { key, chips };
+  return chips;
 }
 
-function schoolEventMap(_0xfed5d8) {
-  const _0x280b52 = {};
-  (state.schoolCustomEvents || []).forEach(_0x19a90d => {
-    if (!_0x19a90d.startDate) {
-      return;
-    }
-    const _0x589550 =
-      _0x19a90d.endDate && _0x19a90d.endDate >= _0x19a90d.startDate ? _0x19a90d.endDate : _0x19a90d.startDate;
-    let _0x56ef24 = _0x19a90d.startDate;
-    for (let _0x22d9f6 = 0; _0x22d9f6 < 60 && _0x56ef24 <= _0x589550; _0x22d9f6++) {
-      if (_0x56ef24.startsWith(`${_0xfed5d8}-`)) {
-        _0x280b52[_0x56ef24] = _0x19a90d;
-      }
-      _0x56ef24 = addDays(_0x56ef24, 1);
-    }
-  });
-  return _0x280b52;
+// true / false: is this summer day in a week that Parent 1 picked. null: not a summer day.
+function summerWeekSelected(month0, day) {
+  if (!inSummerWindow(month0, day)) {
+    return null;
+  }
+  const chip = summerChips().find(c => c.month === month0 && day >= c.start && day <= c.end);
+  return chip ? !!state.summerSelected[chip.id] : false;
 }
 
-function resolveDay(_0x1913ce, _0x3361ed, _0x503568, _0x42d938, _0x174ac9) {
-  const _0x4f60eb = dateStr(_0x1913ce, _0x3361ed, _0x503568);
-  if (state.overrides[_0x4f60eb]) {
-    return {
-      owner: state.overrides[_0x4f60eb],
-      source: "override"
-    };
+function summerRangeText() {
+  const [sm, sd] = monthDayParts(state.summerStart);
+  const [em, ed] = monthDayParts(state.summerEnd);
+  return `${MONTH_SHORT[sm]} ${sd} – ${MONTH_SHORT[em]} ${ed}`;
+}
+
+// ---- school calendar entries -----------------------------------------------------------------
+
+function schoolEventMap(year) {
+  const map = {};
+  (state.schoolCustomEvents || []).forEach(ev => {
+    if (!ev.startDate) {
+      return;
+    }
+    const last = ev.endDate && ev.endDate >= ev.startDate ? ev.endDate : ev.startDate;
+    let day = ev.startDate;
+    for (let i = 0; i < 60 && day <= last; i++) {
+      if (day.startsWith(`${year}-`)) {
+        map[day] = ev;
+      }
+      day = addDays(day, 1);
+    }
+  });
+  return map;
+}
+
+// ---- one day and a whole year ----------------------------------------------------------------
+
+function resolveDay(year, month0, day, holidayMap, schoolMap) {
+  const ds = dateStr(year, month0, day);
+  if (state.overrides[ds]) {
+    return { owner: state.overrides[ds], source: "override" };
   }
-  if (_0x42d938[_0x4f60eb]) {
-    return {
-      owner: _0x42d938[_0x4f60eb].owner,
-      source: "special",
-      special: _0x42d938[_0x4f60eb]
-    };
+  if (holidayMap[ds]) {
+    return { owner: holidayMap[ds].owner, source: "special", special: holidayMap[ds] };
   }
-  const _0x29929a = _0x174ac9[_0x4f60eb];
-  if (_0x29929a && (_0x29929a.kind === "p1" || _0x29929a.kind === "p2")) {
-    return {
-      owner: _0x29929a.kind,
-      source: "schoolEv",
-      schoolEv: _0x29929a
-    };
+  const school = schoolMap[ds];
+  if (school && (school.kind === "p1" || school.kind === "p2")) {
+    return { owner: school.kind, source: "schoolEv", schoolEv: school };
   }
-  const _0x5172da = state.summerEnabled && (_0x3361ed === 5 || _0x3361ed === 6 || (_0x3361ed === 7 && _0x503568 <= 14));
-  if (_0x5172da) {
-    if (summerWeekSelected(_0x3361ed, _0x503568)) {
-      return {
-        owner: "p1",
-        source: "summerP1"
-      };
+  if (state.summerEnabled && inSummerWindow(month0, day)) {
+    if (summerWeekSelected(month0, day)) {
+      return { owner: "p1", source: "summerP1" };
     }
     if (state.summerRestP2 && !state.scheduleUnset) {
-      return {
-        owner: "p2",
-        source: "summerP2"
-      };
+      return { owner: "p2", source: "summerP2" };
     }
   }
-  return {
-    owner: baseOwner(_0x1913ce, _0x3361ed, _0x503568),
-    source: "base"
-  };
+  return { owner: baseOwner(year, month0, day), source: "base" };
 }
 
-function buildYear(_0x5d23a8) {
-  const { map: _0x10bb4a, summaryRows: _0x4c7a92 } = buildHolidays(_0x5d23a8);
-  const _0x5b36ea = schoolEventMap(_0x5d23a8);
-  const { schoolEnd: _0x26e580, schoolStart: _0x1de331 } = schoolDatesFor(_0x5d23a8);
-  const _0x249d6e = p1Name();
-  const _0x550d37 = p2Name();
-  const _0x12333c = (state.summerEmoji || "🌻").trim() || "🌻";
-  const _0x25295f = [];
-  let _0x45425f = resolveDay(
-    _0x5d23a8 - 1,
-    11,
-    31,
-    buildHolidays(_0x5d23a8 - 1).map,
-    schoolEventMap(_0x5d23a8 - 1)
-  ).owner;
-  for (let _0x381ed1 = 0; _0x381ed1 < 12; _0x381ed1++) {
-    for (let _0x225529 = 1; _0x225529 <= daysInMonth(_0x5d23a8, _0x381ed1); _0x225529++) {
-      const _0x11c3d0 = dateStr(_0x5d23a8, _0x381ed1, _0x225529);
-      const _0x21a927 = noonDate(_0x5d23a8, _0x381ed1, _0x225529).getDay();
-      const _0x435f03 = resolveDay(_0x5d23a8, _0x381ed1, _0x225529, _0x10bb4a, _0x5b36ea);
-      const _0x32b99d = _0x435f03.owner;
-      const _0xee33ba = _0x5b36ea[_0x11c3d0];
-      const _0x33fadb = _0x381ed1 === 5 || _0x381ed1 === 6 || (_0x381ed1 === 7 && _0x225529 <= 14);
-      const _0x20da43 = _0x11c3d0 > _0x26e580 && _0x11c3d0 < _0x1de331;
-      let _0x31b0db = _0x32b99d === "none" ? "Not assigned yet" : `Base (${ownerLabel(_0x32b99d)})`;
-      let _0x3e53a2 = "";
-      let _0x28cdf4 = false;
-      let _0x2ac0bc = false;
-      let _0x19f449 = "";
-      if (_0x435f03.source === "override") {
-        _0x31b0db = "Custom Override";
-        _0x2ac0bc = true;
-      } else if (_0x435f03.source === "special") {
-        _0x31b0db = _0x435f03.special.label;
-        _0x3e53a2 = _0x435f03.special.icon;
-        _0x28cdf4 = true;
-      } else if (_0x435f03.source === "schoolEv") {
-        _0x31b0db = _0x435f03.schoolEv.title || "No School";
-        _0x3e53a2 = "🏫";
-      } else if (_0x435f03.source === "summerP1") {
-        _0x31b0db = `${_0x249d6e} Summer Week`;
-        _0x3e53a2 = _0x12333c;
-      } else if (_0x435f03.source === "summerP2") {
-        _0x31b0db = `${_0x550d37} Summer Time`;
-        _0x3e53a2 = _0x12333c;
+// Work is cached until the calendar changes, because one screen asks for the same year several times.
+const yearMemo = { json: "", holidays: {}, years: {} };
+function yearMemoFor() {
+  const json = JSON.stringify(state);
+  if (yearMemo.json !== json) {
+    yearMemo.json = json;
+    yearMemo.holidays = {};
+    yearMemo.years = {};
+  }
+  return yearMemo;
+}
+
+function buildYear(year) {
+  const memo = yearMemoFor();
+  if (memo.years[year]) {
+    return memo.years[year];
+  }
+  const { map: holidayMap, summaryRows } = buildHolidays(year);
+  const schoolMap = schoolEventMap(year);
+  const { schoolEnd, schoolStart } = schoolDatesFor(year);
+  const p1 = p1Name();
+  const p2 = p2Name();
+  const summerEmoji = (state.summerEmoji || "🌻").trim() || "🌻";
+  const days = [];
+  // the night before Jan 1 decides whether Jan 1 is a hand-off
+  let previousOwner = resolveDay(year - 1, 11, 31, buildHolidays(year - 1).map, schoolEventMap(year - 1)).owner;
+  for (let m = 0; m < 12; m++) {
+    for (let d = 1; d <= daysInMonth(year, m); d++) {
+      const ds = dateStr(year, m, d);
+      const dow = noonDate(year, m, d).getDay();
+      const resolved = resolveDay(year, m, d, holidayMap, schoolMap);
+      const owner = resolved.owner;
+      const schoolEntry = schoolMap[ds];
+      const inSummer = inSummerWindow(m, d);
+      const outOfSchool = ds > schoolEnd && ds < schoolStart;
+      let reason = owner === "none" ? "Not assigned yet" : `Base (${ownerLabel(owner)})`;
+      let icon = "";
+      let isHoliday = false;
+      let isOverride = false;
+      let splitType = "";
+      if (resolved.source === "override") {
+        reason = "Custom Override";
+        isOverride = true;
+      } else if (resolved.source === "special") {
+        reason = resolved.special.label;
+        icon = resolved.special.icon;
+        isHoliday = true;
+      } else if (resolved.source === "schoolEv") {
+        reason = resolved.schoolEv.title || "No School";
+        icon = "🏫";
+      } else if (resolved.source === "summerP1") {
+        reason = `${p1} Summer Week`;
+        icon = summerEmoji;
+      } else if (resolved.source === "summerP2") {
+        reason = `${p2} Summer Time`;
+        icon = summerEmoji;
       }
       if (
         state.showSplitDays &&
-        !_0x28cdf4 &&
-        !_0x2ac0bc &&
-        _0x32b99d !== "both" &&
-        _0x45425f !== "both" &&
-        _0x32b99d !== "none" &&
-        _0x45425f !== "none" &&
-        _0x32b99d !== _0x45425f
+        !isHoliday &&
+        !isOverride &&
+        owner !== "both" &&
+        previousOwner !== "both" &&
+        owner !== "none" &&
+        previousOwner !== "none" &&
+        owner !== previousOwner
       ) {
-        _0x19f449 = _0x32b99d === "p1" ? "p2-to-p1" : "p1-to-p2";
-        _0x31b0db = `${ownerLabel(_0x45425f)} → ${ownerLabel(_0x32b99d)}`;
+        splitType = owner === "p1" ? "p2-to-p1" : "p1-to-p2";
+        reason = `${ownerLabel(previousOwner)} → ${ownerLabel(owner)}`;
       }
-      _0x45425f = _0x32b99d;
-      let _0x3b89ea = "weekend";
-      let _0x3aed7f = "";
-      if (_0xee33ba) {
-        _0x3aed7f = _0xee33ba.title || (_0xee33ba.kind === "halfday" ? "Half-Day" : "No School");
-        _0x3b89ea = _0xee33ba.kind === "halfday" ? "school" : "break";
-        if (!_0x3e53a2 && _0xee33ba.kind === "halfday") {
-          _0x3e53a2 = "⏰";
+      previousOwner = owner;
+      let schoolStatus = "weekend";
+      let customSchoolLabel = "";
+      if (schoolEntry) {
+        customSchoolLabel = schoolEntry.title || (schoolEntry.kind === "halfday" ? "Half-Day" : "No School");
+        schoolStatus = schoolEntry.kind === "halfday" ? "school" : "break";
+        if (!icon && schoolEntry.kind === "halfday") {
+          icon = "⏰";
         }
-      } else if (_0x435f03.special && _0x435f03.special.kind === "break") {
-        _0x3b89ea = "break";
-      } else if (_0x20da43 || (state.summerEnabled && _0x33fadb)) {
-        _0x3b89ea = "summer";
-      } else if (_0x435f03.special && _0x435f03.special.kind === "holiday") {
-        _0x3b89ea = "holiday";
-      } else if (_0x21a927 >= 1 && _0x21a927 <= 5) {
-        _0x3b89ea = "school";
+      } else if (resolved.special && resolved.special.kind === "break") {
+        schoolStatus = "break";
+      } else if (outOfSchool || (state.summerEnabled && inSummer)) {
+        schoolStatus = "summer";
+      } else if (resolved.special && resolved.special.kind === "holiday") {
+        schoolStatus = "holiday";
+      } else if (dow >= 1 && dow <= 5) {
+        schoolStatus = "school";
       }
-      _0x25295f.push({
-        ds: _0x11c3d0,
-        y: _0x5d23a8,
-        m0: _0x381ed1,
-        d: _0x225529,
-        dow: _0x21a927,
-        owner: _0x32b99d,
-        reason: _0x31b0db,
-        icon: _0x3e53a2,
-        isHoliday: _0x28cdf4,
-        isOverride: _0x2ac0bc,
-        splitType: _0x19f449,
-        schoolStatus: _0x3b89ea,
-        customSchoolLabel: _0x3aed7f
+      days.push({
+        ds,
+        y: year,
+        m0: m,
+        d,
+        dow,
+        owner,
+        reason,
+        icon,
+        isHoliday,
+        isOverride,
+        splitType,
+        schoolStatus,
+        customSchoolLabel
       });
     }
   }
-  return {
-    days: _0x25295f,
-    summaryRows: _0x4c7a92
-  };
+  const built = { days, summaryRows };
+  memo.years[year] = built;
+  return built;
 }
 
-function yearTotals(_0x1cbbce) {
-  const { days: _0x4dfb44 } = buildYear(_0x1cbbce);
-  let _0x18d396 = 0;
-  let _0xe5f9e1 = 0;
-  let _0x313a4d = 0;
-  _0x4dfb44.forEach(_0x3bd179 => {
-    if (_0x3bd179.owner === "p1") {
-      _0x18d396++;
-    } else if (_0x3bd179.owner === "p2") {
-      _0xe5f9e1++;
-    } else if (_0x3bd179.owner === "none") {
-    } else {
-      _0x313a4d++;
-      _0x18d396 += 0.5;
-      _0xe5f9e1 += 0.5;
+function yearTotals(year) {
+  const { days } = buildYear(year);
+  let p1 = 0;
+  let p2 = 0;
+  let both = 0;
+  days.forEach(day => {
+    if (day.owner === "p1") {
+      p1++;
+    } else if (day.owner === "p2") {
+      p2++;
+    } else if (day.owner !== "none") {
+      both++;
+      p1 += 0.5;
+      p2 += 0.5;
     }
   });
-  return {
-    p1: _0x18d396,
-    p2: _0xe5f9e1,
-    both: _0x313a4d,
-    total: _0x4dfb44.length
-  };
+  return { p1, p2, both, total: days.length };
 }

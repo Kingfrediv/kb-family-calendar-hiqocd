@@ -106,10 +106,27 @@
               <button class="toggle-btn active" id="modeWeeklyBtn">Weekly</button>
               <button class="toggle-btn" id="modeBiweeklyBtn">Every 2 Weeks</button>
               <button class="toggle-btn" id="modeMonthlyBtn">Monthly</button>
+              <button class="toggle-btn" id="modeCycleBtn">Custom cycle</button>
             </div>
           </div>
           <div class="control-group" id="biweeklyAnchorWrap" style="display:none;">
             <label for="biweeklyAnchorInput">Week 1 Starts (Any Date in Week 1)</label><input type="date" id="biweeklyAnchorInput" />
+          </div>
+          <div class="control-group" id="cycleWrap" style="display:none;">
+            <div class="grid-2">
+              <div>
+                <label for="cycleLengthInput">Cycle length (days)</label>
+                <input type="number" id="cycleLengthInput" min="2" max="28" step="1" inputmode="numeric" />
+              </div>
+              <div>
+                <label for="cycleAnchorInput">Day 1 of the cycle is</label>
+                <input type="date" id="cycleAnchorInput" />
+              </div>
+            </div>
+            <div class="hint">
+              The pattern below repeats without a break, starting from day 1. Tap a day to give it to the other parent. Good for shift work
+              and rotations like 4 days on, 4 days off.
+            </div>
           </div>
           <div class="control-group" id="presetWrap">
             <label>Common schedules</label>
@@ -123,6 +140,16 @@
                 Every other weekend (Fri–Sun to <span class="lbl-p2">Parent 2</span>)
               </button>
               <button type="button" class="btn btn-sm preset-btn" data-preset="eow-mid">Every other weekend + midweek overnight</button>
+              <button type="button" class="btn btn-sm preset-btn" data-preset="eow-thu">
+                Every other long weekend (Thu–Sun to <span class="lbl-p2">Parent 2</span>)
+              </button>
+              <button type="button" class="btn btn-sm preset-btn" data-preset="3-3-4-4">3-3-4-4</button>
+              <button type="button" class="btn btn-sm preset-btn" data-preset="4-3-3-4">4-3-3-4</button>
+              <button type="button" class="btn btn-sm preset-btn" data-preset="4-3">4-3 (Mon–Thu / Fri–Sun)</button>
+              <button type="button" class="btn btn-sm preset-btn" data-preset="5-2">5-2 (weekdays / weekends)</button>
+              <button type="button" class="btn btn-sm preset-btn" data-preset="4-4">4 on, 4 off (8-day cycle)</button>
+              <button type="button" class="btn btn-sm preset-btn" data-preset="3-3">3 on, 3 off (6-day cycle)</button>
+              <button type="button" class="btn btn-sm preset-btn" data-preset="5-5">5 on, 5 off (10-day cycle)</button>
             </div>
             <div class="hint" style="margin-top:6px;margin-bottom:0;">
               One tap fills the pattern below. Two-week schedules use Every 2 Weeks and keep your week-start and Week 1 date. Flip Parents
@@ -260,7 +287,7 @@
         <div class="card">
           <h2 class="section-title">☀️ Summer Schedule Layer</h2>
           <div class="control-group">
-            <label>Summer Override (Jun 1 – Aug 14, including month-end days)</label>
+            <label>Summer Override (<span id="summerRangeLabel">Jun 1 – Aug 14</span>, including month-end days)</label>
             <div class="toggle-row">
               <button class="toggle-btn active" id="summerOnBtn">Use Summer Weeks</button
               ><button class="toggle-btn" id="summerOffBtn">Keep Base Schedule</button>
@@ -274,17 +301,22 @@
                 ><button class="toggle-btn" id="summerRestBaseBtn">Follow Base Schedule</button>
               </div>
             </div>
+            <div id="summerMonths"></div>
             <div class="control-group">
-              <label>June (<span class="lbl-p1">Parent 1</span>) <span class="week-status" id="juneStatus"></span></label>
-              <div class="week-grid" id="juneWeeks"></div>
+              <label id="lblSummerStart">Summer starts</label>
+              <div class="bday-row">
+                <select id="summerStartMonth" aria-labelledby="lblSummerStart"></select>
+                <select id="summerStartDay" aria-label="Summer start day"></select>
+              </div>
             </div>
             <div class="control-group">
-              <label>July (<span class="lbl-p1">Parent 1</span>) <span class="week-status" id="julyStatus"></span></label>
-              <div class="week-grid" id="julyWeeks"></div>
-            </div>
-            <div class="control-group">
-              <label>August 1–14 (<span class="lbl-p1">Parent 1</span>) <span class="week-status" id="augStatus"></span></label>
-              <div class="week-grid" id="augWeeks"></div>
+              <label id="lblSummerEnd">Summer ends</label>
+              <div class="bday-row">
+                <select id="summerEndMonth" aria-labelledby="lblSummerEnd"></select>
+                <select id="summerEndDay" aria-label="Summer end day"></select>
+              </div>
+              <button type="button" class="btn btn-sm" id="btnSummerFromSchool" style="margin-top:6px;">Match my school dates</button>
+              <div class="hint">Summer runs from the day after the last day of school to the day before the first day of fall.</div>
             </div>
             <div class="control-group" style="margin-top:8px;">
               <label for="summerDeadlineInput">Summer Selection Deadline</label><input type="text" id="summerDeadlineInput" />
@@ -301,6 +333,32 @@
         </div>
         <div class="card">
           <h2 class="section-title">Holidays &amp; Traditions</h2>
+          <div class="control-group">
+            <label for="regionSelect">Holiday calendar</label>
+            <select id="regionSelect"></select>
+          </div>
+          <div class="control-group">
+            <label>Monday holidays</label>
+            <div class="toggle-row">
+              <button class="toggle-btn active" id="longWeekendOff">Just the Monday</button
+              ><button class="toggle-btn" id="longWeekendOn">The whole long weekend</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label>Christmas</label>
+            <div class="toggle-row">
+              <button class="toggle-btn active" id="splitXmasOff">Same parent Eve &amp; Day</button
+              ><button class="toggle-btn" id="splitXmasOn">Split Eve and Day</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label>More holidays (dates move each year)</label>
+            <div id="packControls"></div>
+            <div class="hint">
+              Dates are worked out for each year. Holidays that depend on sighting the moon can fall a day earlier or later where you live;
+              tap a holiday tile to change that year.
+            </div>
+          </div>
           <div class="control-group">
             <label>Alternating Year Rotation</label>
             <div class="toggle-row">
@@ -388,6 +446,14 @@
           </div>
           <div class="control-group">
             <label for="springBreakInput">Spring Break Starts (Monday, 7 days)</label><input type="date" id="springBreakInput" />
+          </div>
+          <div class="control-group">
+            <label id="lblWinter">Winter break</label>
+            <div class="grid-2">
+              <select id="winterStartDay" aria-label="Winter break starts in December on day"></select>
+              <select id="winterEndDay" aria-label="Winter break ends in January on day"></select>
+            </div>
+            <div class="hint">Starts in December and runs into January. The first week goes to one parent, the rest to the other.</div>
           </div>
           <div class="control-group" style="border-top:1px solid var(--border);padding-top:10px;margin-top:10px;">
             <label>Add School Calendar Day / Break</label>

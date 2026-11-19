@@ -74,7 +74,20 @@ const SHARE_KEYS = {
   mothersDayOwner: "md",
   fathersDayOwner: "fd",
   agreementNotes: "nt",
-  scheduleUnset: "su"
+  scheduleUnset: "su",
+  // second release (short names must stay unique and never change)
+  region: "zr",
+  longWeekends: "zw",
+  splitChristmas: "zx",
+  holidayFlip: "zf",
+  packs: "zp",
+  summerStart: "za",
+  summerEnd: "zb",
+  winterStartDay: "zc",
+  winterEndDay: "zd",
+  cycleLength: "ze",
+  baseCycle: "zg",
+  cycleAnchor: "zh"
 };
 
 const SHARE_KEYS_REVERSE = {};
@@ -184,7 +197,7 @@ function unpackSchoolEvents(_0x3e29c6) {
 }
 
 function packShareValue(_0x447674, _0x3edb5c) {
-  if (_0x447674 === "baseWeekly" || _0x447674 === "baseBiweekly" || _0x447674 === "baseMonthly") {
+  if (_0x447674 === "baseWeekly" || _0x447674 === "baseBiweekly" || _0x447674 === "baseMonthly" || _0x447674 === "baseCycle") {
     return bitsToString(_0x3edb5c);
   }
   if (_0x447674 === "summerSelected") {
@@ -209,6 +222,10 @@ function unpackShareValue(_0x2e89b1, _0x58a4ae) {
   if (_0x2e89b1 === "baseMonthly") {
     return stringToBits(_0x58a4ae, 35);
   }
+  if (_0x2e89b1 === "baseCycle") {
+    const text = String(_0x58a4ae || "").slice(0, 28);
+    return stringToBits(text, text.length);
+  }
   if (_0x2e89b1 === "summerSelected") {
     return stringToSummer(_0x58a4ae);
   }
@@ -221,35 +238,57 @@ function unpackShareValue(_0x2e89b1, _0x58a4ae) {
   return _0x58a4ae;
 }
 
-function stateToShareObject(_0x571895) {
-  const _0x3ae459 = sampleState();
-  const _0x3d226b = {
-    y: _0x571895.year
-  };
-  Object.keys(SHARE_KEYS).forEach(_0x250c17 => {
-    if (_0x250c17 === "year") {
+// A calendar as the short object that goes into a share link: only what differs from the sample calendar.
+function stateToShareObject(source) {
+  const sample = sampleState();
+  const out = { y: source.year };
+  Object.keys(SHARE_KEYS).forEach(key => {
+    if (key === "year") {
       return;
     }
-    if (!deepEqual(_0x571895[_0x250c17], _0x3ae459[_0x250c17])) {
-      _0x3d226b[SHARE_KEYS[_0x250c17]] = packShareValue(_0x250c17, _0x571895[_0x250c17]);
+    if (!deepEqual(source[key], sample[key])) {
+      out[SHARE_KEYS[key]] = packShareValue(key, source[key]);
     }
   });
-  return _0x3d226b;
+  // summer weeks outside the original June to mid-August window (ids such as "may3") travel as a list
+  const extra = Object.keys(source.summerSelected || {})
+    .filter(id => source.summerSelected[id] && SUMMER_IDS.indexOf(id) < 0)
+    .sort();
+  if (extra.length) {
+    out.zi = extra.join(",");
+  }
+  return out;
 }
 
-function shareObjectToState(_0xe935fd) {
-  const _0x186594 = {};
-  if (!_0xe935fd || typeof _0xe935fd !== "object") {
-    return _0x186594;
+function shareObjectToState(share) {
+  const out = {};
+  if (!share || typeof share !== "object") {
+    return out;
   }
-  Object.keys(_0xe935fd).forEach(_0x54258d => {
-    const _0x1d29f2 = SHARE_KEYS_REVERSE[_0x54258d];
-    if (!_0x1d29f2) {
+  Object.keys(share).forEach(shortKey => {
+    const key = SHARE_KEYS_REVERSE[shortKey];
+    if (!key) {
       return;
     }
-    _0x186594[_0x1d29f2] = unpackShareValue(_0x1d29f2, _0xe935fd[_0x54258d]);
+    out[key] = unpackShareValue(key, share[shortKey]);
   });
-  return _0x186594;
+  if (typeof share.zi === "string") {
+    const base = out.summerSelected || Object.assign({}, sampleState().summerSelected);
+    share.zi
+      .slice(0, 200)
+      .split(",")
+      .forEach(id => {
+        if (isSummerWeekId(id)) {
+          base[id] = true;
+        }
+      });
+    out.summerSelected = base;
+  }
+  return out;
+}
+
+function isSummerWeekId(id) {
+  return typeof id === "string" && /^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[1-5]$/.test(id);
 }
 
 function bytesToBase64Url(_0x182926) {

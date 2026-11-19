@@ -15,7 +15,7 @@ const OLD = process.env.KB_OLD || L.path.join(L.ROOT, 'compat', 'v0-original.htm
     const a = await mk(); await a.page.goto(url + 'old.html'); await L.unlock(a.page, { names: ['Avery', 'Jordan', 'Taylor'] }); await setup(a.page); await a.page.waitForTimeout(150);
     const want = { o: await L.owners(a.page), t: await text(a.page) };
     await L.act(a.page, '#btnCopyLink'); await a.page.click('#btnShareCopy'); await a.page.waitForSelector('#shareResult.show'); const plain = (await a.page.evaluate(() => navigator.clipboard.readText())).replace('old.html', '');
-    await a.page.click('#btnShareCancel'); await L.act(a.page, '#btnCopyLink'); await a.page.fill('#sharePasscode', 'a'); await a.page.fill('#sharePasscode2', 'a'); await a.page.click('#btnShareCopy'); await a.page.waitForSelector('#shareResult.show'); const locked = (await a.page.evaluate(() => navigator.clipboard.readText())).replace('old.html', ''); await a.page.click('#btnShareCancel');
+    await a.page.click('#btnShareCancel'); await L.act(a.page, '#btnCopyLink'); await a.page.fill('#sharePasscode', 'secret-pass'); await a.page.fill('#sharePasscode2', 'secret-pass'); await a.page.click('#btnShareCopy'); await a.page.waitForSelector('#shareResult.show'); const locked = (await a.page.evaluate(() => navigator.clipboard.readText())).replace('old.html', ''); await a.page.click('#btnShareCancel');
     const legacy = await a.page.evaluate(() => { const s = JSON.parse(localStorage.custody_cal_v9); return '#s=' + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(s))))); });
     // saved calendar opened by the new build in the same browser profile
     await a.page.goto(url); await a.page.waitForTimeout(300);
@@ -28,7 +28,7 @@ const OLD = process.env.KB_OLD || L.path.join(L.ROOT, 'compat', 'v0-original.htm
     for (const [kind, lk] of [['plain', plain], ['locked', locked], ['older-format', url + legacy]]) {
       const b = await mk(); await L.unlock(await (async () => { await b.page.goto(url); return b.page; })(), {});      // licensed viewer: no view-only layout changes
       await b.page.goto(lk);
-      if (kind === 'locked') { await b.page.waitForSelector('#passcodeOverlay.show', { timeout: 8000 }); await b.page.fill('#unlockPasscode', 'a'); await b.page.click('#btnUnlockShare'); }
+      if (kind === 'locked') { await b.page.waitForSelector('#passcodeOverlay.show', { timeout: 8000 }); await b.page.fill('#unlockPasscode', 'secret-pass'); await b.page.click('#btnUnlockShare'); }
       await b.page.waitForSelector('#sharedBanner.show', { timeout: 8000 }); await b.page.evaluate(() => document.getElementById('viewYearBtn').click());
       got = { o: await L.owners(b.page), t: await text(b.page) };
       check(`${kind} link from the old version opens unchanged — ${name}`, JSON.stringify(got.o) === JSON.stringify(want.o) && got.t.rules === want.t.rules && got.t.notes === want.t.notes && got.t.school === want.t.school && got.t.stats === want.t.stats, Object.keys(want.o).filter(k => want.o[k] !== got.o[k]).length + ' nights differ');

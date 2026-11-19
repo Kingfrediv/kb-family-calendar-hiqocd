@@ -281,7 +281,7 @@ function kbSanitize(s) {
   ["titleEmoji", "summerEmoji", "schoolEmoji"].forEach(k => {
     s[k] = kbStr(s[k], 16, d[k]);
   });
-  s.baseMode = kbOneOf(s.baseMode, ["weekly", "biweekly", "monthly"], "weekly");
+  s.baseMode = kbOneOf(s.baseMode, ["weekly", "biweekly", "monthly", "cycle"], "weekly");
   s.baseWeekly = kbBools(s.baseWeekly, 7, d.baseWeekly);
   s.baseBiweekly = kbBools(s.baseBiweekly, 14, d.baseBiweekly);
   s.baseMonthly = kbBools(s.baseMonthly, 35, d.baseMonthly);
@@ -312,12 +312,54 @@ function kbSanitize(s) {
   s.mothersDayOwner = kbOneOf(s.mothersDayOwner, ["skip", "p1", "p2", "both"], "skip");
   s.fathersDayOwner = kbOneOf(s.fathersDayOwner, ["skip", "p1", "p2", "both"], "skip");
   {
+    // the twelve original weeks always exist; weeks in other months (a longer or later summer) are kept when valid
     const sel = kbObj(s.summerSelected);
     const out = {};
     SUMMER_IDS.forEach(id => {
       out[id] = !!sel[id];
     });
+    Object.keys(sel).forEach(id => {
+      if (isSummerWeekId(id) && SUMMER_IDS.indexOf(id) < 0) {
+        out[id] = !!sel[id];
+      }
+    });
     s.summerSelected = out;
+  }
+  // ---- settings added in the second release
+  s.region = kbOneOf(s.region, ["us", "ca", "uk", "au"], "us");
+  s.longWeekends = kbBool(s.longWeekends, false);
+  s.splitChristmas = kbBool(s.splitChristmas, false);
+  {
+    const flips = {};
+    const raw = kbObj(s.holidayFlip);
+    Object.keys(raw).forEach(k => {
+      if (/^[\w-]{1,60}$/.test(k) && raw[k]) {
+        flips[k] = true;
+      }
+    });
+    s.holidayFlip = flips;
+    const packs = kbObj(s.packs);
+    const clean = {};
+    ["jewish", "islamic", "hindu", "chinese"].forEach(name => {
+      clean[name] = kbOneOf(packs[name], ["off", "alt", "p1", "p2", "both"], "off");
+    });
+    s.packs = clean;
+  }
+  s.summerStart = isMonthDayText(s.summerStart) ? s.summerStart : "06-01";
+  s.summerEnd = isMonthDayText(s.summerEnd) ? s.summerEnd : "08-14";
+  if (s.summerStart > s.summerEnd) {
+    s.summerStart = "06-01";
+    s.summerEnd = "08-14";
+  }
+  {
+    const w1 = kbIntOrNull(s.winterStartDay, 15, 31);
+    const w2 = kbIntOrNull(s.winterEndDay, 1, 15);
+    s.winterStartDay = w1 == null ? 20 : w1;
+    s.winterEndDay = w2 == null ? 2 : w2;
+    const n = kbIntOrNull(s.cycleLength, 2, 28);
+    s.cycleLength = n == null ? 14 : n;
+    s.baseCycle = kbBools(s.baseCycle, s.cycleLength, new Array(s.cycleLength).fill(false));
+    s.cycleAnchor = kbValidDate(s.cycleAnchor) ? s.cycleAnchor : "2026-01-04";
   }
   s.schoolEndByYear = kbDateMap(s.schoolEndByYear);
   s.schoolStartByYear = kbDateMap(s.schoolStartByYear);
