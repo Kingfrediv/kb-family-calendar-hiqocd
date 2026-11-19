@@ -90,9 +90,11 @@ const axeSrc = L.fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
   // ---- 13 keyboard
   const active = () => page.evaluate(() => (document.activeElement.dataset && document.activeElement.dataset.fk) || document.activeElement.id || document.activeElement.tagName);
   await page.locator('button.day-cell[data-ds="2026-03-05"]').focus(); await page.keyboard.press('Enter');
-  check('13 focus stays on the day after Enter', (await active()) === 'day:2026-03-05', await active());
-  await page.keyboard.press('ArrowRight'); await page.keyboard.press(' ');
-  check('13 arrow keys then Space still work', (await active()) === 'day:2026-03-06' && (await page.locator('button.day-cell[data-ds="2026-03-06"].is-override').count()) === 1, await active());
+  await page.waitForTimeout(120); check('13 Enter on a day opens its sheet and focus moves inside it', (await page.locator('#daySheet.show').count()) === 1 && (await page.evaluate(() => !!document.activeElement.closest('#daySheet'))));
+  await page.keyboard.press('Escape');
+  check('13 Escape closes the sheet and focus returns to that day', (await active()) === 'day:2026-03-05', await active());
+  await page.keyboard.press('ArrowRight');
+  check('13 arrow keys still move between days', (await active()) === 'day:2026-03-06', await active());
   await page.evaluate(() => document.querySelector('.hol-tile').focus()); await page.keyboard.press('Enter');
   check('13 focus stays on a holiday tile', (await active()).startsWith('hol:'), await active());
   await page.evaluate(() => document.querySelector('.dp-tile').focus()); await page.keyboard.press('Enter');
@@ -111,7 +113,7 @@ const axeSrc = L.fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
 
   // ---- 21 undo + passcode
   await page.waitForTimeout(900);
-  await page.click('button.day-cell[data-ds="2026-03-10"]'); await page.waitForTimeout(900);
+  await L.flipDay(page, '2026-03-10'); await page.waitForTimeout(900);
   await page.click('#btnNextYear'); await page.click('#viewMonthBtn'); await page.click('#viewYearBtn'); await page.waitForTimeout(900);
   await page.click('#btnUndo');
   check('21 Undo after browsing removes the last edit, not the browsing', (await page.locator('button.day-cell[data-ds="2026-03-10"].is-override').count()) === 0 && (await page.textContent('#btnResetOverrides')).includes('(0)'), 'year shown ' + await page.textContent('#headerYearBadge'));
@@ -170,7 +172,7 @@ const axeSrc = L.fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
   check('18 no pop-up message baked into the copy', !/class="toast show"/.test(baked) && !/class="toast[^"]*">[^<]+</.test(baked));
   check('1 Download Copy creates no extra storage slot', (await page.evaluate(() => Object.keys(localStorage).sort().join())) === keysBefore, await page.evaluate(() => Object.keys(localStorage).sort().join()));
   await page.waitForTimeout(900);
-  await page.fill('#childNameInput', 'Riley'); await page.click('.preset-btn[data-preset="3-4-4-3"]'); await page.click('button.day-cell[data-ds="2026-03-04"]'); await page.waitForTimeout(300);
+  await page.fill('#childNameInput', 'Riley'); await page.click('.preset-btn[data-preset="3-4-4-3"]'); await L.flipDay(page, '2026-03-04'); await page.waitForTimeout(300);
   const b4 = { t: await page.textContent('#headerTitle'), o: await L.owners(page), n: await page.textContent('#btnResetOverrides') };
   await page.reload(); await page.waitForTimeout(300);
   const af = { t: await page.textContent('#headerTitle'), o: await L.owners(page), n: await page.textContent('#btnResetOverrides') };
@@ -187,11 +189,15 @@ const axeSrc = L.fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
     check('10 recipient is not shown the settings panel', await r.page.locator('.sidebar').isHidden());
     const ovBefore = JSON.stringify(await L.owners(r.page));
     await r.page.click('button.day-cell[data-ds="2026-03-05"]');
-    check('2 view-only: tapping a day changes nothing and offers the licence box', (await r.page.locator('#licenseOverlay.show').count()) === 1 && JSON.stringify(await L.owners(r.page)) === ovBefore);
-    check('X the licence box can be dismissed ("Not now")', await r.page.locator('#btnLicenseClose').isVisible());
+    check('2 view-only: tapping a day opens a read-only sheet (no licence wall)', (await r.page.locator('#daySheet.show').count()) === 1 && (await r.page.locator('#licenseOverlay.show').count()) === 0 && (await r.page.locator('#dayEdit').isHidden()) && (await r.page.locator('#planAdd').isHidden()) && (await r.page.locator('#btnDaySelectMore').isHidden()), await r.page.textContent('#daySheetWhy'));
+    check('2 view-only: the sheet says who has the night and why', /overnight/.test(await r.page.textContent('#daySheetWhy')) && /Thursday, March 5/.test(await r.page.textContent('#daySheetTitle')), await r.page.textContent('#daySheetTitle'));
+    await r.page.keyboard.press('Escape');
+    check('2 view-only: nothing changed', JSON.stringify(await L.owners(r.page)) === ovBefore && (await r.page.locator('#daySheet.show').count()) === 0);
+    await r.page.click('#btnEnterLicense');
+    check('X the licence box can be opened from the banner and dismissed ("Not now")', (await r.page.locator('#licenseOverlay.show').count()) === 1 && (await r.page.locator('#btnLicenseClose').isVisible()));
     await r.page.click('#btnLicenseClose');
     check('X ...and the calendar is usable again', (await r.page.locator('#licenseOverlay.show').count()) === 0 && (await r.page.locator('.container').isVisible()));
-    await r.page.click('button.day-cell[data-ds="2026-03-05"]'); await r.page.keyboard.press('Escape');
+    await r.page.click('#btnEnterLicense'); await r.page.keyboard.press('Escape');
     check('X Escape also dismisses it', (await r.page.locator('#licenseOverlay.show').count()) === 0);
     check('2 exports stay switched off for view-only', await r.page.evaluate(() => ['btnSaveBakedHtml', 'btnCopyLink', 'btnExportIcs', 'btnPrint', 'btnExportCsv'].every(id => document.getElementById(id).disabled)));
     await r.ctx.close();
@@ -204,7 +210,7 @@ const axeSrc = L.fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
   {
     const p3 = await ctx.newPage(); L.watch(p3, allLogs); await p3.goto(url + 'baked.html'); await p3.waitForTimeout(300);
     check('2 owner opening their own copy gets the full editor', (await p3.locator('#sharedBanner.show').count()) === 0 && (await p3.evaluate(() => document.body.className.trim())) === '' && (await p3.locator('.toast.show').count()) === 0);
-    await p3.click('button.day-cell[data-ds="2026-04-01"]'); await p3.waitForTimeout(200); await p3.reload(); await p3.waitForTimeout(300);
+    await L.flipDay(p3, '2026-04-01'); await p3.waitForTimeout(200); await p3.reload(); await p3.waitForTimeout(300);
     check('1 edits inside a copy survive reload', (await p3.locator('button.day-cell[data-ds="2026-04-01"].is-override').count()) === 1);
     await p3.click('#btnResetAll'); await p3.waitForTimeout(300); await p3.fill('#childNameInput', 'NewKid'); await p3.click('.preset-btn[data-preset="7-7"]'); await p3.waitForTimeout(300); await p3.reload(); await p3.waitForTimeout(300);
     check('1 Reset All + new edits inside a copy survive reload', (await p3.textContent('#headerTitle')).includes('NewKid'), await p3.textContent('#headerTitle'));

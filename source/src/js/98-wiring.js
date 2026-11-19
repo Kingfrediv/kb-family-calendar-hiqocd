@@ -84,19 +84,6 @@ document.getElementById("licenseKeyInput").addEventListener("keydown", _0x1fc2cf
 
 document.addEventListener("click", blockEditsWhenUnlicensed, true);
 
-document.addEventListener(
-  "keydown",
-  _0x268f51 => {
-    if (_0x268f51.key === "Enter" || _0x268f51.key === " ") {
-      const _0x5dd056 = _0x268f51.target;
-      if (_0x5dd056 && _0x5dd056.classList && _0x5dd056.classList.contains("day-cell") && !isLicensed()) {
-        _0x268f51.preventDefault();
-        requireLicense();
-      }
-    }
-  },
-  true
-);
 
 window.addEventListener("beforeprint", _0x4e94c6 => {
   if (!isLicensed()) {

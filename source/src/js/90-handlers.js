@@ -443,24 +443,6 @@ document.getElementById("notesTextarea").oninput = _0x175964 => {
   document.getElementById("notesReadonly").textContent = state.agreementNotes;
 };
 
-function cycleOverride(_0x2e2382, _0x5b7dbf) {
-  if (!isLicensed()) {
-    requireLicense();
-    return;
-  }
-  const _0x9167b4 = ["p1", "p2", "both"];
-  const _0x42e37f = state.overrides[_0x2e2382];
-  if (!_0x42e37f) {
-    state.overrides[_0x2e2382] = _0x9167b4[0] === _0x5b7dbf ? _0x9167b4[1] : _0x9167b4[0];
-    return;
-  }
-  const _0x4d28bb = _0x9167b4.indexOf(_0x42e37f);
-  if (_0x4d28bb < 0 || _0x4d28bb === _0x9167b4.length - 1) {
-    delete state.overrides[_0x2e2382];
-    return;
-  }
-  state.overrides[_0x2e2382] = _0x9167b4[_0x4d28bb + 1];
-}
 
 function moveFocusInGrid(_0x4b877e, _0x3fb26c) {
   const _0x4d3925 = [...document.querySelectorAll("button.day-cell:not(.empty)")];

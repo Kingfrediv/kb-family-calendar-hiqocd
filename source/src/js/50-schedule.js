@@ -168,9 +168,10 @@ function schoolEventMap(year) {
 
 // ---- one day and a whole year ----------------------------------------------------------------
 
-function resolveDay(year, month0, day, holidayMap, schoolMap) {
+// ignoreOverride: what the day would be if nobody had tapped it
+function resolveDay(year, month0, day, holidayMap, schoolMap, ignoreOverride) {
   const ds = dateStr(year, month0, day);
-  if (state.overrides[ds]) {
+  if (!ignoreOverride && state.overrides[ds]) {
     return { owner: state.overrides[ds], source: "override" };
   }
   if (holidayMap[ds]) {
@@ -292,7 +293,8 @@ function buildYear(year) {
         isOverride,
         splitType,
         schoolStatus,
-        customSchoolLabel
+        customSchoolLabel,
+        source: resolved.source
       });
     }
   }

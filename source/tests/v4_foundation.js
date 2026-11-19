@@ -14,9 +14,9 @@ const axeSrc = L.fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
   check('menu: closed at start, button says it has a popup', (await page.locator('#shareMenu').isHidden()) && (await page.getAttribute('#btnMenuShare', 'aria-haspopup')) === 'menu' && (await page.getAttribute('#btnMenuShare', 'aria-expanded')) === 'false');
   await page.click('#btnMenuShare');
   check('menu: opens, first item is focused, state is announced', (await page.locator('#shareMenu').isVisible()) && (await active(page)) === 'btnCopyLink' && (await page.getAttribute('#btnMenuShare', 'aria-expanded')) === 'true', await active(page));
-  const order = []; for (let i = 0; i < 9; i++) { order.push(await active(page)); await page.keyboard.press('ArrowDown'); }
-  check('menu: arrow keys walk every item and wrap round', order.slice(0, 7).join() === 'btnCopyLink,btnSaveBakedHtml,btnExportIcs,btnPrint,btnExportCsv,btnBackup,btnRestore' && order[7] === 'btnCopyLink', order.join());
-  await page.keyboard.press('End'); check('menu: End goes to the last item', (await active(page)) === 'btnRestore', await active(page));
+  const order = []; for (let i = 0; i < 10; i++) { order.push(await active(page)); await page.keyboard.press('ArrowDown'); }
+  check('menu: arrow keys walk every item and wrap round', order.slice(0, 8).join() === 'btnCopyLink,btnSaveBakedHtml,btnExportIcs,btnPrint,btnExportCsv,btnBackup,btnRestore,btnHistory' && order[8] === 'btnCopyLink', order.join());
+  await page.keyboard.press('End'); check('menu: End goes to the last item', (await active(page)) === 'btnHistory', await active(page));
   await page.keyboard.press('Escape');
   check('menu: Escape closes it and returns focus to the button', (await page.locator('#shareMenu').isHidden()) && (await active(page)) === 'btnMenuShare');
   await page.click('#btnMenuShare'); await page.mouse.click(5, 450);
@@ -41,7 +41,7 @@ const axeSrc = L.fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
 
   // ---------------- backup
   await page.selectOption('#bdayChildMonth', '8'); await page.selectOption('#bdayChildDay', '12');
-  await page.click('button.day-cell[data-ds="' + cy + '-03-04"]');
+  await L.flipDay(page, cy + '-03-04');
   await page.fill('#exchangeLocationInput', 'School, front office');
   await L.act(page, '#btnMenuShare'); await page.keyboard.press('Escape');
   const file = await dl(page, '#btnBackup');
@@ -98,7 +98,7 @@ const axeSrc = L.fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8')
     check('app: every icon file exists', icons.every(s => s === 200), icons.join());
     await o.ctx.setOffline(true); await o.page.reload(); await o.page.waitForTimeout(500);
     check('app: offline, the page still opens with the calendar and the license', (await o.page.textContent('#headerTitle')).includes('Avery') && (await o.page.locator('#licenseOverlay.show').count()) === 0 && (await o.page.locator('button.day-cell').count()) === 365, await o.page.textContent('#headerTitle'));
-    await o.page.click('button.day-cell[data-ds="' + new Date().getFullYear() + '-05-05"]'); check('app: offline, editing still works', (await o.page.locator('button.day-cell.is-override').count()) === 1);
+    await L.flipDay(o.page, new Date().getFullYear() + '-05-05'); check('app: offline, editing still works', (await o.page.locator('button.day-cell.is-override').count()) === 1);
     await o.ctx.setOffline(false);
     const cacheNames = await o.page.evaluate(async () => caches.keys());
     check('app: the cache is named after this build, so a new release replaces it', cacheNames.length === 1 && /^kb-calendar-[0-9a-f]{10}$/.test(cacheNames[0]), cacheNames.join());

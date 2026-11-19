@@ -72,7 +72,7 @@ async function unlock(page, { setup = true, names } = {}) {
 async function days(page) {
   return page.$$eval('button.day-cell', els => Object.fromEntries(els.map(e => [e.dataset.ds, { cls: e.className.replace('day-cell ', ''), title: e.title, label: e.querySelector('.day-label')?.textContent || '', icon: e.querySelector('.day-icons')?.textContent || '' }])));
 }
-function ownerOf(d) { const m = d.title.match(/^\S+: (.*?) overnight/); return m ? m[1] : '?'; }
+function ownerOf(d) { const m = d.title.match(/: (.*?) overnight/); return m ? m[1] : '?'; }
 async function stats(page) {
   return page.evaluate(() => ({ p1: document.getElementById('statP1Days').textContent, p1pct: document.getElementById('statP1Pct').textContent, p2: document.getElementById('statP2Days').textContent, p2pct: document.getElementById('statP2Pct').textContent, both: document.getElementById('statBothDays').textContent, two: document.getElementById('statTwoYearAvg').textContent, base: document.getElementById('baseSplitBar').textContent }));
 }
@@ -96,3 +96,23 @@ async function act(page, sel) {
   await el.click();
 }
 Object.assign(module.exports, { act });
+
+// ---- the day sheet (tapping a day no longer cycles it)
+// Choose who has a night: who = 'p1' | 'p2' | 'both' | 'usual'.  Opens the sheet, picks, closes it.
+async function setDay(page, ds, who) {
+  await page.click(`button.day-cell[data-ds="${ds}"]`);
+  await page.waitForSelector('#daySheet.show');
+  await page.click({ p1: '#dayOwnerP1', p2: '#dayOwnerP2', both: '#dayOwnerBoth', usual: '#dayOwnerUsual' }[who]);
+  await page.click('#btnDayDone');
+  await page.waitForSelector('#daySheet.show', { state: 'detached' });
+}
+// Give the night to whichever parent does not have it now (what a single tap used to do).
+async function flipDay(page, ds) {
+  await page.click(`button.day-cell[data-ds="${ds}"]`);
+  await page.waitForSelector('#daySheet.show');
+  const p1Has = (await page.getAttribute('#dayOwnerP1', 'aria-pressed')) === 'true';
+  await page.click(p1Has ? '#dayOwnerP2' : '#dayOwnerP1');
+  await page.click('#btnDayDone');
+  await page.waitForSelector('#daySheet.show', { state: 'detached' });
+}
+Object.assign(module.exports, { setDay, flipDay });

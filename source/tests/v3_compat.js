@@ -22,7 +22,7 @@ const OLD = process.env.KB_OLD || L.path.join(L.ROOT, 'compat', 'v0-original.htm
     let got = { o: await L.owners(a.page), t: await text(a.page) };
     check(`saved calendar from the old version loads unchanged — ${name}`, JSON.stringify(got) === JSON.stringify(want), Object.keys(want.o).filter(k => want.o[k] !== got.o[k]).length + ' nights differ; text same: ' + (JSON.stringify(got.t) === JSON.stringify(want.t)));
     // ...and can be edited, saved, reloaded
-    await a.page.click('button.day-cell[data-ds="2026-09-15"]'); await a.page.waitForTimeout(150); await a.page.reload(); await a.page.waitForTimeout(250);
+    await L.flipDay(a.page, '2026-09-15'); await a.page.waitForTimeout(150); await a.page.reload(); await a.page.waitForTimeout(250);
     check(`...and keeps working after an edit + reload — ${name}`, (await a.page.locator('button.day-cell[data-ds="2026-09-15"].is-override').count()) === 1);
     await a.ctx.close();
     for (const [kind, lk] of [['plain', plain], ['locked', locked], ['older-format', url + legacy]]) {

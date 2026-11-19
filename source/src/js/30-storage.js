@@ -345,6 +345,30 @@ function kbSanitize(s) {
     });
     s.packs = clean;
   }
+  {
+    // notes and plans for single days
+    const notes = {};
+    const rawNotes = kbObj(s.dayNotes);
+    Object.keys(rawNotes)
+      .slice(0, 800)
+      .forEach(day => {
+        const text = kbStr(rawNotes[day], 300, "");
+        if (kbValidDate(day) && text.trim()) {
+          notes[day] = text;
+        }
+      });
+    s.dayNotes = notes;
+    const validTime = t => typeof t === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(t);
+    s.activities = (Array.isArray(s.activities) ? s.activities : [])
+      .filter(a => a && typeof a === "object" && kbValidDate(a.date))
+      .slice(0, 400)
+      .map((a, i) => ({
+        id: typeof a.id === "string" && /^[\w-]{1,40}$/.test(a.id) ? a.id : "a" + i,
+        date: a.date,
+        time: validTime(a.time) ? a.time : "",
+        title: kbStr(a.title, 60, "").trim() || "Plan"
+      }));
+  }
   s.summerStart = isMonthDayText(s.summerStart) ? s.summerStart : "06-01";
   s.summerEnd = isMonthDayText(s.summerEnd) ? s.summerEnd : "08-14";
   if (s.summerStart > s.summerEnd) {
@@ -495,14 +519,19 @@ function save(_0x12f078) {
       localStorage.setItem(currentStorageKey(), JSON.stringify(state));
     } catch {}
   }
-  lastSavedJson = JSON.stringify(state);
+  const nextJson = JSON.stringify(state);
+  if (!viewingShared && isLicensed() && !(_0x12f078 && _0x12f078.nav)) {
+    recordHistory(lastSavedJson, nextJson);
+  }
+  lastSavedJson = nextJson;
+  noteCalendarName();
   updateUndoButton();
 }
 
 function updateUndoButton() {
-  const _0x4d675e = document.getElementById("btnUndo");
-  if (_0x4d675e) {
-    _0x4d675e.disabled = !undoStack.length;
+  const button = document.getElementById("btnUndo");
+  if (button) {
+    button.disabled = !isLicensed() || !undoStack.length;
   }
 }
 
@@ -521,6 +550,7 @@ function undo() {
     } catch {}
   }
   lastSavedJson = JSON.stringify(state);
+  recordHistoryNote("Undid the last change");
   updateUndoButton();
   drawSummer();
   drawCustomHolidayList();

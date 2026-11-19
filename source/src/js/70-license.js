@@ -100,11 +100,11 @@ function applyLicenseState() {
     "btnExportIcs",
     "btnPrint",
     "btnExportCsv",
-    "btnUndo",
     "btnSaveShared",
     "btnDownloadShared",
     "btnBackup",
-    "btnRestore"
+    "btnRestore",
+    "btnAddCalendar"
   ];
   _0x1ecbf0.forEach(_0x4562ab => {
     const _0x58d094 = document.getElementById(_0x4562ab);
@@ -112,6 +112,9 @@ function applyLicenseState() {
       _0x58d094.disabled = !isLicensed();
     }
   });
+  // the license is read after the first drawing, so these depend on it being known
+  updateUndoButton();
+  renderCalendarList();
 }
 
 function requireLicense() {
@@ -334,7 +337,7 @@ function blockEditsWhenUnlicensed(_0x4c4f63) {
   }
   const _0x49d09f =
     _0x3b65ce.closest(
-      "button.day-cell,.preset-btn,.dp-tile,.week-chip,.hol-tile,.swap-years,#btnSaveBakedHtml,#btnCopyLink,#btnExportIcs,#btnPrint,#btnExportCsv,#btnBackup,#btnRestore,#btnUndo,#btnSaveShared,#btnDownloadShared,#btnBaseFlip,#btnBaseClear,#btnAddCustomHol,#btnAddSchoolEvent,#btnToggleNotesEdit,#btnResetOverrides,#notesTextarea"
+      ".preset-btn,.dp-tile,.week-chip,.hol-tile,.swap-years,#btnSaveBakedHtml,#btnCopyLink,#btnExportIcs,#btnPrint,#btnExportCsv,#btnBackup,#btnRestore,#btnUndo,#btnSaveShared,#btnDownloadShared,#btnBaseFlip,#btnBaseClear,#btnAddCustomHol,#btnAddSchoolEvent,#btnToggleNotesEdit,#btnResetOverrides,#notesTextarea"
     ) ||
     (_0x3b65ce.closest(".sidebar") && _0x3b65ce.closest("button,input,select,textarea,label"));
   if (!_0x49d09f) {

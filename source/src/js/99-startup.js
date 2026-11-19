@@ -62,3 +62,5 @@ if (kbRecovered) {
 registerServiceWorker();
 
 announceRestore();
+
+announceApplied();

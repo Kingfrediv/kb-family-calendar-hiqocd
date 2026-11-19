@@ -73,7 +73,10 @@ function defaultState() {
     winterEndDay: 2,
     cycleLength: 14,
     baseCycle: new Array(14).fill(false),
-    cycleAnchor: "2026-01-04"
+    cycleAnchor: "2026-01-04",
+    // ---- third release
+    dayNotes: {},
+    activities: []
   };
 }
 

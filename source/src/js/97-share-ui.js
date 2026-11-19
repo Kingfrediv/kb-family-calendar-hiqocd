@@ -6,10 +6,15 @@ function renderEverything() {
   updateUndoButton();
 }
 
+// what the sender wrote when they made the link, shown to whoever opens it
+let incomingShareNote = "";
+
 function openSharedState(_0x5dcd27) {
   viewingShared = true;
   pendingShareKind = null;
+  incomingShareNote = kbStr(_0x5dcd27 && _0x5dcd27.shareNote, 200, "");
   state = normalizeState(Object.assign({}, sampleState(), _0x5dcd27 || {}));
+  delete state.shareNote;
   kbViewerDefaults();
   undoStack = [];
   document.body.classList.remove("share-pending", "share-loading-on");
@@ -169,7 +174,8 @@ async function nativeShare() {
   );
 }
 
-function openShareDialog() {
+function openShareDialog(options) {
+  document.getElementById("shareMessage").value = options && options.message ? String(options.message).slice(0, 200) : "";
   document.getElementById("sharePasscode").value = "";
   document.getElementById("sharePasscode2").value = "";
   const _0x225972 = document.getElementById("sharePassError");
@@ -187,10 +193,11 @@ function openShareDialog() {
     _0x2edb47.classList.remove("show");
   }
   document.getElementById("shareOverlay").classList.add("show");
-  setTimeout(() => document.getElementById("sharePasscode").focus(), 50);
+  setTimeout(() => document.getElementById(options && options.message ? "shareMessage" : "sharePasscode").focus(), 50);
 }
 
 async function createShareLink() {
+  const shareMessage = document.getElementById("shareMessage").value.trim();
   const _0x26d460 = document.getElementById("sharePasscode").value;
   const _0x3ab911 = document.getElementById("sharePasscode2").value;
   const _0x4928da = document.getElementById("sharePassError");
@@ -210,7 +217,9 @@ async function createShareLink() {
   let _0x51c913;
   try {
     _0x51c913 =
-      _0x26d460 && _0x26d460.length ? await makeLockedHash(state, _0x26d460) : await makeCompressedHash(state);
+      _0x26d460 && _0x26d460.length
+        ? await makeLockedHash(state, _0x26d460, shareMessage)
+        : await makeCompressedHash(state, shareMessage);
   } catch (_0x1a20ea) {
     _0x4928da.textContent = "Could not build the share link on this browser.";
     _0x4928da.classList.add("show");

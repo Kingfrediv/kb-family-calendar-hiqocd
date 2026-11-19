@@ -11,7 +11,7 @@ function buildBackup() {
     active: state.fileId,
     calendars: listCalendars()
       .filter(c => c.state)
-      .map(c => ({ id: c.id, state: c.state }))
+      .map(c => ({ id: c.id, state: c.state, history: readHistory(c.id) }))
   };
 }
 
@@ -58,7 +58,7 @@ function parseBackup(text) {
     used[id] = true;
     const clean = normalizeState(Object.assign(defaultState(), c.state));
     clean.fileId = id;
-    calendars.push({ id, state: clean });
+    calendars.push({ id, state: clean, history: cleanHistory(c.history) });
   });
   if (!calendars.length) {
     throw new Error("That backup has no readable calendars in it.");
@@ -68,10 +68,16 @@ function parseBackup(text) {
 
 // Replaces everything stored on this device with the given calendars, then reloads the page.
 function applyCalendars(calendars, active) {
-  readProfileIndex().forEach(p => removeCalendarSlot(p.id));
+  readProfileIndex().forEach(p => {
+    removeCalendarSlot(p.id);
+    try {
+      localStorage.removeItem(historyKey(p.id));
+    } catch {}
+  });
   const index = [];
   calendars.forEach(c => {
     writeCalendarSlot(c.id, c.state);
+    writeHistory(c.id, c.history || []);
     if (c.id !== "") {
       index.push({ id: c.id, name: (c.state.childName || "").trim() });
     }

@@ -29,6 +29,7 @@
       <div class="header-actions">
         <button type="button" class="btn btn-dark" id="btnToggleSidebar" aria-label="Hide settings">✕ Hide Settings</button>
         <button type="button" class="btn btn-dark" id="btnUndo" aria-label="Undo last change" disabled="disabled">↩ Undo</button>
+        <select id="calendarSwitch" class="calendar-switch" aria-label="Switch calendar" hidden></select>
         <span class="year-nav">
           <button type="button" class="btn btn-dark" id="btnPrevYear" aria-label="Previous year">&larr; 2025</button>
           <span id="headerYearBadge" aria-live="polite">2026</span>
@@ -60,6 +61,8 @@
             <button type="button" class="menu-item" role="menuitem" id="btnRestore">⬆️ Restore from a backup</button>
             <input type="file" id="restoreFile" accept=".json,application/json" hidden />
             <div class="menu-note" id="backupNote">Last backup: never</div>
+            <div class="menu-label" role="presentation">This device</div>
+            <button type="button" class="menu-item" role="menuitem" id="btnHistory">🕘 Change history</button>
             <div class="menu-label" role="presentation" id="menuAppLabel">App</div>
             <button type="button" class="menu-item" role="menuitem" id="btnInstall" hidden>📲 Install app</button>
             <div class="menu-note" id="privacyNote">
@@ -72,8 +75,10 @@
     <div class="shared-banner no-print" id="sharedBanner" role="status">
       <strong id="sharedBannerTitle">You are viewing a shared link.</strong>
       <span id="sharedBannerText">It is not saved in this browser and will not change the calendar already stored on this device.</span>
+      <span class="shared-message" id="sharedMessage" hidden></span>
       <div class="banner-actions licensed-share-actions">
         <button type="button" class="btn btn-accent" id="btnSaveShared">Save to this browser</button>
+        <button type="button" class="btn" id="btnCompareShared">Compare with my calendar</button>
         <button type="button" class="btn" id="btnDownloadShared">Download Copy</button>
         <button type="button" class="btn" id="btnDismissShared">Dismiss</button>
       </div>
@@ -98,6 +103,12 @@
     </div>
     <div class="container" id="mainContainer">
       <aside class="sidebar">
+        <div class="card" id="calendarsCard">
+          <h2 class="section-title">👧 My calendars</h2>
+          <div class="item-list" id="calendarList"></div>
+          <button type="button" class="btn btn-accent" id="btnAddCalendar" style="width:100%;margin-top:8px;">+ Add another child or calendar</button>
+          <div class="hint">Each calendar has its own schedule, holidays and notes. They stay on this device.</div>
+        </div>
         <div class="card">
           <h2 class="section-title">📅 Base Custody Days (Tap to Choose)</h2>
           <div class="control-group">
@@ -615,6 +626,76 @@
     <footer class="site-footer" id="siteFooter">
       © <span class="lbl-cyear">2026</span> Kingdom Building. For personal use only. Not legal advice.
     </footer>
+    <div class="setup-overlay no-print" id="daySheet" role="dialog" aria-modal="true" aria-labelledby="daySheetTitle">
+      <div class="setup-card day-sheet">
+        <h2 id="daySheetTitle">Day</h2>
+        <p class="day-sheet-why" id="daySheetWhy"></p>
+        <div id="dayEdit">
+          <div class="day-owner-row" role="group" aria-label="Who has this overnight">
+            <button type="button" class="day-owner p1" id="dayOwnerP1" data-owner="p1"></button>
+            <button type="button" class="day-owner p2" id="dayOwnerP2" data-owner="p2"></button>
+            <button type="button" class="day-owner both" id="dayOwnerBoth" data-owner="both">Together</button>
+          </div>
+          <button type="button" class="btn btn-sm" id="dayOwnerUsual">Back to the usual schedule</button>
+        </div>
+        <div class="control-group" id="dayNoteGroup">
+          <label for="dayNote">Note for this day</label>
+          <textarea id="dayNote" maxlength="300" rows="2" placeholder="e.g. Dentist at 3, pack the swim bag"></textarea>
+        </div>
+        <div class="control-group" id="dayPlansGroup">
+          <label id="lblPlans">Plans</label>
+          <div class="item-list" id="dayPlans" aria-labelledby="lblPlans"></div>
+          <div class="plan-add" id="planAdd">
+            <input type="time" id="planTime" aria-label="Time of the plan (optional)" />
+            <input type="text" id="planTitle" maxlength="60" placeholder="e.g. Soccer practice" aria-label="Plan" />
+            <button type="button" class="btn btn-sm btn-accent" id="btnAddPlan">Add</button>
+          </div>
+        </div>
+        <div class="setup-actions">
+          <button type="button" class="btn" id="btnDaySelectMore">Select several days…</button>
+          <button type="button" class="btn" id="btnDayRequest">Send a change request…</button>
+          <button type="button" class="btn btn-accent" id="btnDayDone">Done</button>
+        </div>
+      </div>
+    </div>
+    <div class="range-bar no-print" id="rangeBar" role="region" aria-label="Choose several days" hidden>
+      <div class="range-bar-text" id="rangeText" aria-live="polite">Tap the first day, then the last day.</div>
+      <div class="range-bar-actions">
+        <button type="button" class="btn btn-sm day-owner p1" id="rangeP1" data-range-owner="p1"></button>
+        <button type="button" class="btn btn-sm day-owner p2" id="rangeP2" data-range-owner="p2"></button>
+        <button type="button" class="btn btn-sm day-owner both" data-range-owner="both">Together</button>
+        <button type="button" class="btn btn-sm" data-range-owner="usual">Usual schedule</button>
+        <button type="button" class="btn btn-sm" id="btnRangeRequest">Send a change request…</button>
+        <button type="button" class="btn btn-sm" id="btnRangeDone">Done</button>
+      </div>
+    </div>
+    <div class="setup-overlay no-print" id="reviewOverlay" role="dialog" aria-modal="true" aria-labelledby="reviewTitle">
+      <div class="setup-card">
+        <h2 id="reviewTitle">Changes in this link</h2>
+        <p class="hint" id="reviewIntro"></p>
+        <p class="review-message" id="reviewMessage" hidden></p>
+        <div id="reviewList" class="review-list"></div>
+        <div class="setup-actions">
+          <button type="button" class="btn" id="btnReviewCancel">Close</button>
+          <button type="button" class="btn btn-accent" id="btnReviewApply">Apply selected changes</button>
+        </div>
+      </div>
+    </div>
+    <div class="setup-overlay no-print" id="historyOverlay" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+      <div class="setup-card">
+        <h2 id="historyTitle">Change history</h2>
+        <p class="hint">What was changed on this device, and when. It is not sent anywhere and is not part of share links.</p>
+        <div class="control-group">
+          <label for="actorSelect">Who is using this device?</label>
+          <select id="actorSelect"></select>
+        </div>
+        <ol class="history-list" id="historyList"></ol>
+        <div class="setup-actions">
+          <button type="button" class="btn btn-danger" id="btnHistoryClear">Clear history</button>
+          <button type="button" class="btn btn-accent" id="btnHistoryClose">Close</button>
+        </div>
+      </div>
+    </div>
     <div class="toast" id="toast" role="status" aria-live="polite"><span id="toastText"></span><button type="button" id="toastAction" hidden></button></div>
     <p class="print-disclaimer">
       © <span class="lbl-cyear">2026</span> Kingdom Building. This calendar is a planning aid only. It is not legal advice and is not a
@@ -628,6 +709,10 @@
           The schedule is stored in the link's URL fragment (it is not sent to a server). Optional: add a passcode and share it separately
           so the link alone reveals nothing.
         </p>
+        <div class="control-group">
+          <label for="shareMessage">Message (optional)</label>
+          <input type="text" id="shareMessage" maxlength="200" placeholder="e.g. Could we swap Mar 14–16?" autocomplete="off" />
+        </div>
         <div class="control-group">
           <label for="sharePasscode">Passcode (optional, 6 or more characters)</label
           ><input type="password" id="sharePasscode" autocomplete="new-password" />

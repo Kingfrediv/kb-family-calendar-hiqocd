@@ -373,7 +373,7 @@ function renderChrome() {
   }
   const _0x261911 = document.getElementById("clickCycleHint");
   if (_0x261911) {
-    _0x261911.textContent = `Click a day to cycle: ${p1Name()} → ${p2Name()} → Together → back to the regular schedule. Keyboard: Enter or Space.`;
+    _0x261911.textContent = `Tap a day to see who has it and why, change it, or add a note or plan. Choose “Select several days” there to give a trip or long weekend to ${p1Name()}, ${p2Name()} or both in one go.`;
   }
   const _0x17cdcd = document.getElementById("btnToggleSidebar");
   if (_0x17cdcd) {
@@ -502,6 +502,7 @@ function renderChrome() {
   document.getElementById("notesEditorWrap").style.display = notesEditing ? "block" : "none";
   document.getElementById("btnToggleNotesEdit").textContent = notesEditing ? "Done Editing" : "Edit Notes";
   renderScheduleControls();
+  renderCalendarList();
   document.querySelectorAll(".toggle-btn").forEach(b => {
     b.setAttribute("aria-pressed", b.classList.contains("active") ? "true" : "false");
   });
@@ -522,6 +523,9 @@ function kbBannerText() {
   x.textContent = copy
     ? ""
     : "It is not saved in this browser and will not change the calendar already stored on this device.";
+  const note = document.getElementById("sharedMessage");
+  note.hidden = !incomingShareNote;
+  note.textContent = incomingShareNote ? `Message from the sender: “${incomingShareNote}”` : "";
 }
 
 // People who were sent a schedule get the calendar first, not the settings.
@@ -677,9 +681,15 @@ function renderNow() {
       _0x4d5926.className = _0x3c1fd2;
       _0x4d5926.dataset.ds = _0x55b6ec.ds;
       _0x4d5926.dataset.fk = "day:" + _0x55b6ec.ds;
-      const _0x4c0c90 = `${_0x55b6ec.ds}: ${ownerLabel(_0x55b6ec.owner)} overnight — ${_0x55b6ec.reason}${_0x55b6ec.customSchoolLabel ? " (" + _0x55b6ec.customSchoolLabel + ")" : ""}`;
-      _0x4d5926.title = _0x4c0c90;
-      _0x4d5926.setAttribute("aria-label", _0x4c0c90 + ". Click or press Enter to change who has this overnight.");
+      const dayNote = state.dayNotes[_0x55b6ec.ds];
+      const dayPlans = state.activities.filter(a => a.date === _0x55b6ec.ds);
+      const _0x4c0c90 = `${shortDate(_0x55b6ec.ds)}: ${ownerLabel(_0x55b6ec.owner)} overnight — ${_0x55b6ec.reason}${_0x55b6ec.customSchoolLabel ? " (" + _0x55b6ec.customSchoolLabel + ")" : ""}`;
+      const extras = (dayNote ? ". Has a note" : "") + (dayPlans.length ? `. ${dayPlans.length} plan${dayPlans.length === 1 ? "" : "s"}` : "");
+      _0x4d5926.title = _0x4c0c90 + (dayNote ? `\n${dayNote}` : "") + dayPlans.map(p => `\n${p.time ? formatTime12(p.time) + " " : ""}${p.title}`).join("");
+      _0x4d5926.setAttribute("aria-label", _0x4c0c90 + extras + ". Press Enter to open this day.");
+      if (selected.has(_0x55b6ec.ds)) {
+        _0x4d5926.classList.add("is-selected");
+      }
       const _0x1d027d = _0x55b6ec.icon || (_0x55b6ec.schoolStatus === "school" ? _0x64ef20 : "");
       let _0x1701d0 = "";
       if (_0x55b6ec.isHoliday || _0x55b6ec.isOverride) {
@@ -691,12 +701,8 @@ function renderNow() {
       } else if (_0x55b6ec.splitType === "p1-to-p2") {
         _0x1701d0 = `→ ${_0x527835}`;
       }
-      _0x4d5926.innerHTML = `<div class="day-top"><span>${_0x55b6ec.d}</span><span class="day-icons">${esc(_0x1d027d)}</span></div><div class="day-label">${esc(_0x1701d0)}</div>`;
-      _0x4d5926.onclick = () => {
-        cycleOverride(_0x55b6ec.ds, _0x55b6ec.owner);
-        save();
-        render();
-      };
+      _0x4d5926.innerHTML = `<div class="day-top"><span>${_0x55b6ec.d}</span><span class="day-icons">${esc(_0x1d027d)}${dayNote || dayPlans.length ? '<span class="day-note-dot" aria-hidden="true"></span>' : ""}</span></div><div class="day-label">${esc(_0x1701d0)}</div>`;
+      _0x4d5926.onclick = ev => onDayClick(_0x55b6ec.ds, ev);
       _0x4d5926.onkeydown = _0x168908 => {
         if (
           _0x168908.key === "ArrowRight" ||

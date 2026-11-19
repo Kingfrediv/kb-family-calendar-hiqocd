@@ -266,5 +266,47 @@ function kbCloseDialog(el) {
     finishSetup(false);
     return true;
   }
+  if (el.id === "daySheet") {
+    closeDaySheet();
+    return true;
+  }
+  if (el.id === "reviewOverlay") {
+    el.classList.remove("show");
+    kbReturnFocus();
+    return true;
+  }
+  if (el.id === "historyOverlay") {
+    el.classList.remove("show");
+    kbReturnFocus();
+    return true;
+  }
   return false;
+}
+
+// ---- plain-language dates and times ("Wednesday, March 4", "Wed, Mar 4", "3:30 PM")
+function longDate(ds) {
+  const d = parseDateStr(ds);
+  return `${DOW_FULL[d.getDay()]}, ${MONTH_NAMES[d.getMonth()]} ${d.getDate()}`;
+}
+
+function shortDate(ds) {
+  const d = parseDateStr(ds);
+  return `${DOW_3[d.getDay()]}, ${MONTH_SHORT[d.getMonth()]} ${d.getDate()}`;
+}
+
+// "Mar 4 – Mar 6" for a run of days, or "Mar 4" for one
+function dateRangeText(first, last) {
+  const a = parseDateStr(first);
+  const b = parseDateStr(last);
+  const one = d => `${MONTH_SHORT[d.getMonth()]} ${d.getDate()}`;
+  return first === last ? one(a) : `${one(a)} – ${one(b)}`;
+}
+
+function formatTime12(hhmm) {
+  const m = /^(\d{2}):(\d{2})$/.exec(hhmm || "");
+  if (!m) {
+    return "";
+  }
+  const h = Number(m[1]);
+  return `${h % 12 === 0 ? 12 : h % 12}:${m[2]} ${h < 12 ? "AM" : "PM"}`;
 }

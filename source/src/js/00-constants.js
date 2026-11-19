@@ -31,6 +31,8 @@ const DOW_2 = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 const DOW_3 = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+const DOW_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
 const DEFAULT_NOTES =
   "• Phone / Video Chat: Reasonable daily call or video chat on non-custodial evenings.\n• Snow Days & Teacher Workdays: Follow the regular overnight schedule unless agreed otherwise.\n• Travel Notice: At least 14 days' notice with itinerary if traveling out of state.\n• Right of First Refusal: Offer the other parent the first option before using a babysitter for 4+ hours.";
 

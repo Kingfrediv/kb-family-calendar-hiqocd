@@ -87,7 +87,10 @@ const SHARE_KEYS = {
   winterEndDay: "zd",
   cycleLength: "ze",
   baseCycle: "zg",
-  cycleAnchor: "zh"
+  cycleAnchor: "zh",
+  // third release
+  dayNotes: "zj",
+  activities: "zk"
 };
 
 const SHARE_KEYS_REVERSE = {};
@@ -203,6 +206,9 @@ function packShareValue(_0x447674, _0x3edb5c) {
   if (_0x447674 === "summerSelected") {
     return summerToString(_0x3edb5c);
   }
+  if (_0x447674 === "activities") {
+    return (_0x3edb5c || []).map(a => [a.id, a.date, a.time, a.title]);
+  }
   if (_0x447674 === "customHolidays") {
     return packCustomHolidays(_0x3edb5c);
   }
@@ -229,6 +235,11 @@ function unpackShareValue(_0x2e89b1, _0x58a4ae) {
   if (_0x2e89b1 === "summerSelected") {
     return stringToSummer(_0x58a4ae);
   }
+  if (_0x2e89b1 === "activities") {
+    return (Array.isArray(_0x58a4ae) ? _0x58a4ae : [])
+      .filter(Array.isArray)
+      .map(a => ({ id: a[0], date: a[1], time: a[2], title: a[3] }));
+  }
   if (_0x2e89b1 === "customHolidays") {
     return unpackCustomHolidays(_0x58a4ae);
   }
@@ -239,9 +250,12 @@ function unpackShareValue(_0x2e89b1, _0x58a4ae) {
 }
 
 // A calendar as the short object that goes into a share link: only what differs from the sample calendar.
-function stateToShareObject(source) {
+function stateToShareObject(source, note) {
   const sample = sampleState();
   const out = { y: source.year };
+  if (note) {
+    out.sn = String(note).slice(0, 200);
+  }
   Object.keys(SHARE_KEYS).forEach(key => {
     if (key === "year") {
       return;
@@ -272,6 +286,9 @@ function shareObjectToState(share) {
     }
     out[key] = unpackShareValue(key, share[shortKey]);
   });
+  if (typeof share.sn === "string") {
+    out.shareNote = share.sn.slice(0, 200);
+  }
   if (typeof share.zi === "string") {
     const base = out.summerSelected || Object.assign({}, sampleState().summerSelected);
     share.zi
@@ -333,8 +350,8 @@ function utf8Decode(_0x449877) {
   return new TextDecoder().decode(_0x449877);
 }
 
-async function compressState(_0x51499b) {
-  const _0x54a515 = JSON.stringify(stateToShareObject(_0x51499b));
+async function compressState(_0x51499b, note) {
+  const _0x54a515 = JSON.stringify(stateToShareObject(_0x51499b, note));
   return deflateBytes(utf8Encode(_0x54a515));
 }
 
@@ -343,8 +360,8 @@ async function decompressState(_0x26e879) {
   return shareObjectToState(JSON.parse(_0x4aaffe));
 }
 
-async function makeCompressedHash(_0x5c33d6) {
-  const _0x4e7c72 = await compressState(_0x5c33d6);
+async function makeCompressedHash(_0x5c33d6, note) {
+  const _0x4e7c72 = await compressState(_0x5c33d6, note);
   return "#c=" + bytesToBase64Url(_0x4e7c72);
 }
 
@@ -439,8 +456,8 @@ async function decryptBytes(_0x10b2d5, _0x3602f9) {
   }
 }
 
-async function makeLockedHash(_0x4d7d2c, _0x55addc) {
-  const _0x26e9d9 = await encryptBytes(await compressState(_0x4d7d2c), _0x55addc);
+async function makeLockedHash(_0x4d7d2c, _0x55addc, note) {
+  const _0x26e9d9 = await encryptBytes(await compressState(_0x4d7d2c, note), _0x55addc);
   return "#p=" + bytesToBase64Url(_0x26e9d9);
 }
 
