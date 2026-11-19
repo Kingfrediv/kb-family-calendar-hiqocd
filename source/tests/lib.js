@@ -133,3 +133,15 @@ async function icsDownload(page, opts = {}) {
   return { path: p, text: fs.readFileSync(p, 'utf8'), name: d.suggestedFilename() };
 }
 Object.assign(module.exports, { icsDownload });
+
+// One page of a PDF as grey pixels (pdftoppm writes a plain PGM file, so nothing but poppler is needed): { mean, share(lo, hi) }
+function pdfPageGrey(pdfPath, page, dpi, prefix) {
+  const { execSync } = require('child_process');
+  fs.readdirSync(OUT).filter(f => f.startsWith(path.basename(prefix)) && f.endsWith('.pgm')).forEach(f => fs.unlinkSync(path.join(OUT, f)));
+  execSync(`pdftoppm -r ${dpi} -gray -f ${page} -l ${page} "${pdfPath}" "${prefix}"`);
+  const file = path.join(OUT, fs.readdirSync(OUT).find(f => f.startsWith(path.basename(prefix)) && f.endsWith('.pgm')));
+  const b = fs.readFileSync(file); let i = 0; const tok = () => { while (b[i] <= 32) i++; let t = ''; while (b[i] > 32) t += String.fromCharCode(b[i++]); return t; };
+  tok(); tok(); tok(); tok(); i++; const px = b.subarray(i); let sum = 0; for (const v of px) sum += v;
+  return { mean: sum / px.length, share: (lo, hi) => { let n = 0; for (const v of px) if (v > lo && v < hi) n++; return n / px.length; } };
+}
+Object.assign(module.exports, { pdfPageGrey });
